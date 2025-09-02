@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\jnkarim\\Desktop\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj": {}
+    "E:\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj": {}
   },
   "projects": {
-    "C:\\Users\\jnkarim\\Desktop\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj": {
+    "E:\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\jnkarim\\Desktop\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
+        "projectUniqueName": "E:\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
         "projectName": "CSContestConnect.Web",
-        "projectPath": "C:\\Users\\jnkarim\\Desktop\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
-        "packagesPath": "C:\\Users\\jnkarim\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\jnkarim\\Desktop\\CSContestConnect\\CSContestConnect.Web\\obj\\",
+        "projectPath": "E:\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
+        "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
+        "outputPath": "E:\\CSContestConnect\\CSContestConnect.Web\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\jnkarim\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -85,7 +85,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files (x86)\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.316/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

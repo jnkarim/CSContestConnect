@@ -20,3 +20,13 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.btn-purple {
+  background-color: #6a0dad;
+  color: #fff;
+}
+
+.btn-purple:hover {
+  background-color: #4b007f;
+  color: #fff;
+}
