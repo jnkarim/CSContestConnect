@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("babf7839-b9b1-4cf9-92c7-14eeae3bcd8b")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("CSContestConnect.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7acbb0211f06e96b02a95f529856866697db8508")]
 [assembly: System.Reflection.AssemblyProductAttribute("CSContestConnect.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CSContestConnect.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
