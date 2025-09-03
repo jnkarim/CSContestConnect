@@ -345,3 +345,4 @@ D:\pain\CSContestConnect\CSContestConnect.Web\obj\Debug\net8.0\refint\CSContestC
 D:\pain\CSContestConnect\CSContestConnect.Web\obj\Debug\net8.0\CSContestConnect.Web.pdb
 D:\pain\CSContestConnect\CSContestConnect.Web\obj\Debug\net8.0\CSContestConnect.Web.genruntimeconfig.cache
 D:\pain\CSContestConnect\CSContestConnect.Web\obj\Debug\net8.0\ref\CSContestConnect.Web.dll
+C:\Users\jnkarim\Desktop\CSContestConnect\csContestConnect.Web\obj\Debug\net8.0\CSContestConnect.Web.sourcelink.json

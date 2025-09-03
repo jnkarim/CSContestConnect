@@ -2285,19 +2285,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\yeash\\.nuget\\packages\\": {}
+    "C:\\Users\\jnkarim\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\pain\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
+      "projectUniqueName": "C:\\Users\\jnkarim\\Desktop\\CSContestConnect\\csContestConnect.Web\\CSContestConnect.Web.csproj",
       "projectName": "CSContestConnect.Web",
-      "projectPath": "D:\\pain\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
-      "packagesPath": "C:\\Users\\yeash\\.nuget\\packages\\",
-      "outputPath": "D:\\pain\\CSContestConnect\\CSContestConnect.Web\\obj\\",
+      "projectPath": "C:\\Users\\jnkarim\\Desktop\\CSContestConnect\\csContestConnect.Web\\CSContestConnect.Web.csproj",
+      "packagesPath": "C:\\Users\\jnkarim\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\jnkarim\\Desktop\\CSContestConnect\\csContestConnect.Web\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\yeash\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\jnkarim\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -2368,7 +2368,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.316/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files (x86)\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
