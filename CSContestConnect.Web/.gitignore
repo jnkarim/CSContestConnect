@@ -1,0 +1,30 @@
+# ---- .NET build output ----
+**/bin/
+**/obj/
+**/out/
+
+# ---- IDE files ----
+.vs/
+.vscode/
+
+# ---- User-specific files ----
+*.user
+*.suo
+*.csproj.user
+
+# ---- Tests / coverage ----
+TestResults/
+*.coverage
+*.coveragexml
+
+# ---- NuGet / packages ----
+packages/
+*.nupkg
+
+# ---- Logs / OS cruft ----
+*.log
+.DS_Store
+Thumbs.db
+
+# ---- Optional: if you keep secrets here, ignore it and use User Secrets/env vars instead ----
+# appsettings.Development.json
