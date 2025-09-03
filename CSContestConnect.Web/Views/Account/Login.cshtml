@@ -2,458 +2,163 @@
 @{
     ViewData["Title"] = "Log in";
     Layout = "_Layout";
+    ViewBag.HideNavbar = true; // keep auth screen clean
 }
 
-<style>
-    /* Override global styles for login page */
-    html, body {
-        margin: 0 !important;
-        padding: 0 !important;
-        height: 100% !important;
-        min-height: 100vh !important;
-        overflow-x: hidden;
-    }
-    :root{
-        --bg-dark:#0f0f23;
-        --bg-deep:#151530;
-        --purple:#8b5cf6;
-        --violet:#6d28d9;
-        --ultra:#5b21b6;
-    }
-
-    .screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100vw;
-        height: 100vh;
-        background:
-          radial-gradient(80rem 80rem at -10% -10%, rgba(139,92,246,.15), transparent 40%),
-          radial-gradient(70rem 70rem at 110% 110%, rgba(109,40,217,.12), transparent 45%),
-          linear-gradient(135deg, var(--bg-dark), var(--bg-deep));
-        overflow-y: auto;
-        overflow-x: hidden;
-        z-index: 1;
-    }
-
-    .mesh::before, .mesh::after{
-        content:"";
-        position:absolute; 
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-        background:
-          radial-gradient(30rem 25rem at 20% 30%, rgba(168,85,247,.15), transparent 60%),
-          radial-gradient(35rem 30rem at 80% 70%, rgba(139,92,246,.12), transparent 60%);
-        animation: pulse 12s ease-in-out infinite;
-        mix-blend-mode: screen;
-        pointer-events:none;
-        z-index: 1;
-    }
-    .mesh::after{ 
-        animation-direction: reverse; 
-        opacity:.7; 
-    }
-
-    @@keyframes pulse{
-        0%,100%{ transform: scale(1) rotate(0deg); }
-        50%{ transform: scale(1.05) rotate(1.5deg); }
-    }
-
-    .panel {
-        border-radius: 24px;
-        border: 1px solid rgba(139,92,246,.25);
-        background: rgba(21,21,48,.55);
-        backdrop-filter: blur(14px) saturate(140%);
-        box-shadow: 0 20px 60px rgba(0,0,0,.55);
-        overflow: hidden;
-        position: relative;
-        z-index: 2;
-    }
-
-    .brand-side {
-        background: radial-gradient(120rem 80rem at 0% 0%, rgba(139,92,246,.25), transparent 35%),
-                    linear-gradient(160deg, var(--ultra), var(--violet));
-        color: #fff;
-        position: relative;
-        isolation: isolate;
-    }
-
-    .brand-side .sheen{
-        position:absolute; 
-        inset:0;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
-        transform: translateX(-100%);
-        animation: sheen 6s linear infinite;
-        mix-blend-mode: screen;
-        opacity:.35;
-    }
-
-    @@keyframes sheen{ 
-        100%{ transform: translateX(100%);} 
-    }
-
-    .logo-dot {
-        width: 12px; 
-        height: 12px; 
-        border-radius: 9999px;
-        background: #fff; 
-        box-shadow: 0 0 20px rgba(255,255,255,.6), 0 0 50px rgba(139,92,246,.6);
-    }
-
-    .form-control.bg-glass{
-        background: rgba(255,255,255,.06);
-        border: 1px solid rgba(139,92,246,.35);
-        color: #e8e8ff;
-        border-radius: 14px;
-    }
-    .form-control.bg-glass:focus{
-        background: rgba(255,255,255,.08);
-        border-color: var(--purple);
-        box-shadow: 0 0 0 .25rem rgba(139,92,246,.25);
-        color: #fff;
-    }
-
-    .btn-gradient{
-        background: linear-gradient(90deg, var(--purple), var(--violet));
-        border: none; 
-        color: #fff; 
-        font-weight: 700; 
-        letter-spacing:.3px;
-        border-radius: 14px;
-        box-shadow: 0 10px 30px rgba(139,92,246,.35);
-        transition: transform .15s ease, box-shadow .15s ease, filter .2s ease;
-    }
-    .btn-gradient:hover{
-        filter: brightness(1.05);
-        transform: translateY(-2px);
-        box-shadow: 0 16px 40px rgba(139,92,246,.45);
-        color: #fff;
-    }
-
-    .link-accent { 
-        color: var(--purple); 
-        text-decoration: none; 
-        font-weight: 600; 
-    }
-    .link-accent:hover { 
-        color:#fff; 
-        text-decoration: underline; 
-    }
-
-    .tiny { 
-        font-size:.9rem; 
-        color:#c9c8ff; 
-    }
-    .muted { 
-        color: #a9a7da; 
-    }
-
-    .input-icon{
-        position:absolute; 
-        left: .9rem; 
-        top: 50%; 
-        transform: translateY(-50%);
-        opacity:.75;
-        z-index: 3;
-    }
-    .with-icon{ 
-        padding-left: 2.4rem; 
-    }
-
-    .divider{
-        display:flex; 
-        align-items:center; 
-        gap:.75rem; 
-        color:#bfbef6; 
-        font-size:.85rem;
-    }
-    .divider::before,.divider::after{
-        content:""; 
-        flex:1; 
-        height:1px; 
-        background: linear-gradient(90deg, transparent, rgba(139,92,246,.35), transparent);
-    }
-
-    .help {
-        font-size:.8rem; 
-        color:#cfcdf6;
-    }
-    .text-danger.small { 
-        display:block; 
-        margin-top:.25rem; 
-    }
-
-    .btn:disabled{ 
-        opacity:.65;
-        cursor: not-allowed;
-    }
-
-    /* Input group styling fixes */
-    .input-group .form-control.bg-glass {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-    }
-    
-    .input-group .btn {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        border-left: none;
-    }
-
-    .password-toggle-btn {
-        background: rgba(255,255,255,.06);
-        border: 1px solid rgba(139,92,246,.35);
-        color: #e8e8ff;
-        font-size: 0.85rem;
-        padding: 0.5rem 0.75rem;
-    }
-    
-    .password-toggle-btn:hover {
-        background: rgba(139,92,246,.15);
-        border-color: var(--purple);
-        color: #fff;
-    }
-
-    .form-check-input:checked {
-        background-color: var(--purple);
-        border-color: var(--purple);
-    }
-    
-    .form-check-input:focus {
-        border-color: var(--purple);
-        box-shadow: 0 0 0 .25rem rgba(139,92,246,.25);
-    }
-
-    .alert-danger {
-        background: rgba(220, 53, 69, 0.1);
-        border: 1px solid rgba(220, 53, 69, 0.3);
-        color: #ff6b6b;
-    }
-    /* NEW: per-field wrappers so the icon centers to the input height */
-.field{ position: relative; }
-.field .form-control{ height:56px; padding-left:2.6rem; }
-
-/* Password row uses Bootstrap input-group */
-.field-group{ position: relative; }
-.field-group .form-control{
-  height:56px; padding-left:2.6rem;
-  border-top-right-radius:0; border-bottom-right-radius:0;
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <style>
+        /* Proper Unsplash usage with crop & quality params */
+        .brand-side--login{
+            background-image:
+                linear-gradient(rgba(10,10,20,.45), rgba(10,10,20,.65)),
+                url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
 }
-.field-group .password-toggle-btn{
-  height:56px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(139,92,246,.35);
-  border-left:none;
-  color:#e8e8ff;
-  border-top-left-radius:0; border-bottom-left-radius:0;
-}
-
-/* Icon sits inside the field wrapper, centered to input */
-.input-icon{
-  position:absolute; left:.9rem; top:50%;
-  transform:translateY(-50%);
-  opacity:.75; pointer-events:none; z-index:4;
-}
-
-/* (Optional) remove the old helpers if present */
-.with-icon{ padding-left:0; }        /* no longer needed */
-.input-group .form-control.bg-glass{ border-top-right-radius:0; border-bottom-right-radius:0; }
-.input-group .btn{ border-top-left-radius:0; border-bottom-left-radius:0; border-left:none; }
-
-</style>
 
 <div class="screen mesh d-flex align-items-center justify-content-center px-3">
-    <div class="container">
-        <div class="row g-4 justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div class="panel row g-0">
-                    <!-- Left / Brand -->
-                    <div class="brand-side col-12 col-lg-6 p-5 d-flex flex-column justify-content-between">
-                        <div class="sheen"></div>
+    <div class="auth-wrap container">
+        <div class="panel panel--compact row g-0">
+            <!-- Left / Brand -->
+            <div class="brand-side brand-side--login col-12 col-lg-5 d-flex flex-column justify-content-between">
+              <div class="brand-header px-4 pt-4 d-flex align-items-center justify-content-between">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-light btn-xs rounded-pill fw-semibold px-3">
+                        <i class="bi bi-house-door-fill"></i> Home
+                    </a>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="logo-dot"></div>
+                        <strong class="text-white-50">CSContestConnect</strong>
+                    </div>
+                </div>
 
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="logo-dot"></div>
-                            <strong class="text-white-50">CSContestConnect</strong>
-                        </div>
+                <div class="brand-content px-4 px-md-4 pb-4">
+                    <h2 class="fw-extrabold h2 text-white mb-2">Welcome back</h2>
+                    <p class="mb-0 text-white-75 small">
+                        One hub for hackathons &amp; programming contests.  
+                        Track ticketed events and global competitions.
+                    </p>
+                </div>
+            </div>
 
-                        <div class="my-3">
-                            <h2 class="fw-extrabold display-6 mb-2">Ready, Set, Log In.</h2>
-                            <p class="mb-0 text-white-75">
-                                Central hub for hackathons & programming contests.<br/>
-                                Post events, approve entries, and compete.
-                            </p>
-                        </div>
+            <!-- Right / Form -->
+            <div class="form-side col-12 col-lg-7 p-4 p-md-5">
+                <div class="form-head mb-3">
+                    <h3 class="text-white mb-1 fw-bold">Sign in</h3>
+                    <p class="muted mb-0 small">Use your email and password</p>
+                </div>
 
-                        <div class="d-flex gap-3 small">
-                            <div class="text-white-50">Secure • Fast • Modern</div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 d-none" role="alert"></div>
+
+                <form asp-action="Login" method="post" id="loginForm" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label tiny">Email</label>
+                        <div class="field">
+                            <span class="input-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M4 6h16v12H4z" stroke="#cfcdf6" stroke-width="1.5" opacity=".9"/>
+                                    <path d="M4 7l8 6 8-6" stroke="#cfcdf6" stroke-width="1.5"/>
+                                </svg>
+                            </span>
+                            <input asp-for="Email" type="email" class="form-control bg-glass" placeholder="you@example.com" required />
                         </div>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
                     </div>
 
-                    <!-- Right / Form -->
-                    <div class="col-12 col-lg-6 p-4 p-md-5">
-                        <div class="mb-4">
-                            <h3 class="text-white mb-1 fw-bold">Sign in</h3>
-                            <p class="muted mb-0">Welcome back to the arena.</p>
+                    <!-- Password -->
+                    <div class="mb-2">
+                        <label asp-for="Password" class="form-label tiny">Password</label>
+                        <div class="input-group field-group">
+                            <span class="input-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="9" rx="2" stroke="#cfcdf6" stroke-width="1.5"/>
+                                    <path d="M8 10V8a4 4 0 018 0v2" stroke="#cfcdf6" stroke-width="1.5"/>
+                                </svg>
+                            </span>
+                            <input asp-for="Password" type="password" class="form-control bg-glass" placeholder="••••••••" required aria-describedby="togglePassword" />
+                            <button type="button" class="btn password-toggle-btn" id="togglePassword" aria-label="Show password">
+                                <i class="bi bi-eye"></i>
+                            </button>
                         </div>
-
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert" style="display: none;"></div>
-
-                        <form asp-action="Login" method="post" id="loginForm" novalidate>
-                            @Html.AntiForgeryToken()
-
-                           <!-- Email -->
-<div class="mb-3">
-    <label asp-for="Email" class="form-label tiny">Email</label>
-    <div class="field">
-        <span class="input-icon">
-            <!-- mail icon -->
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 6h16v12H4z" stroke="#cfcdf6" stroke-width="1.5" opacity=".9"/>
-                <path d="M4 7l8 6 8-6" stroke="#cfcdf6" stroke-width="1.5"/>
-            </svg>
-        </span>
-        <input asp-for="Email"
-               type="email"
-               autocomplete="username"
-               class="form-control bg-glass"
-               placeholder="you@example.com"
-               required />
-    </div>
-    <span asp-validation-for="Email" class="text-danger small"></span>
-</div>
-
-<!-- Password -->
-<div class="mb-2">
-    <label asp-for="Password" class="form-label tiny">Password</label>
-    <div class="input-group field-group">
-        <span class="input-icon">
-            <!-- lock icon -->
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="5" y="10" width="14" height="9" rx="2" stroke="#cfcdf6" stroke-width="1.5"/>
-                <path d="M8 10V8a4 4 0 1 1 8 0v2" stroke="#cfcdf6" stroke-width="1.5"/>
-            </svg>
-        </span>
-        <input asp-for="Password"
-               id="pwdField"
-               type="password"
-               autocomplete="current-password"
-               class="form-control bg-glass"
-               placeholder="Your password"
-               required />
-        <button class="btn password-toggle-btn" type="button" id="togglePwd" aria-label="Toggle password visibility">
-            Show
-        </button>
-    </div>
-    <span asp-validation-for="Password" class="text-danger small"></span>
-</div>
-
-
-                            <!-- Remember + Forgot -->
-                            <div class="d-flex justify-content-between align-items-center mt-2 mb-4">
-                                <div class="form-check">
-                                    <input asp-for="RememberMe" class="form-check-input" type="checkbox" id="rememberCheck">
-                                    <label asp-for="RememberMe" class="form-check-label help" for="rememberCheck">Keep me signed in</label>
-                                </div>
-                                <a class="help link-accent" asp-controller="Account" asp-action="ForgotPassword">Forgot password?</a>
-                            </div>
-
-                            <!-- Submit -->
-                            <div class="d-grid">
-                                <button id="loginBtn" type="submit" class="btn btn-gradient py-3">
-                                    <span class="me-1" aria-hidden="true">→</span> Access Portal
-                                </button>
-                            </div>
-
-                            <!-- Divider -->
-                            <div class="divider my-4">or</div>
-
-                            <!-- Register -->
-                            <p class="tiny mb-0 text-center">
-                                New challenger?
-                                <a class="link-accent" asp-controller="Account" asp-action="Register">Create an account</a>
-                            </p>
-                        </form>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
                     </div>
-                </div><!-- /panel -->
+
+                    <!-- Remember / Forgot -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" asp-for="RememberMe" id="rememberMe" />
+                            <label class="form-check-label tiny" for="rememberMe">Remember me</label>
+                        </div>
+                        <a asp-controller="Account" asp-action="ForgotPassword" class="link-accent tiny">Forgot password?</a>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-gradient py-3" id="loginBtn">
+                            Sign in
+                        </button>
+                    </div>
+
+                    <p class="tiny mt-3 mb-0">
+                        No account? <a asp-controller="Account" asp-action="Register" class="link-accent">Create one</a>
+                    </p>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-@section Scripts{
+@section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Show/Hide password
-            const toggleBtn = document.getElementById('togglePwd');
-            const passwordInput = document.getElementById('pwdField');
-            
-            if (toggleBtn && passwordInput) {
-                toggleBtn.addEventListener('click', function(){
-                    const isPassword = passwordInput.getAttribute('type') === 'password';
-                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
-                    this.textContent = isPassword ? 'Hide' : 'Show';
-                    passwordInput.focus();
+        (function () {
+            const form = document.getElementById('loginForm');
+            const toggle = document.getElementById('togglePassword');
+            const pwd = document.getElementById('Password');
+            const summary = document.querySelector('[asp-validation-summary]') || document.querySelector('.alert-danger');
+            const btn = document.getElementById('loginBtn');
+
+            function showSummary(msg) {
+                if (!summary) return;
+                summary.textContent = msg;
+                summary.classList.remove('d-none');
+            }
+            if (toggle && pwd) {
+                toggle.addEventListener('click', function () {
+                    const isPwd = pwd.getAttribute('type') === 'password';
+                    pwd.setAttribute('type', isPwd ? 'text' : 'password');
+                    toggle.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
+                    toggle.innerHTML = isPwd ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
                 });
             }
-
-            // Loading state
-            const loginForm = document.getElementById('loginForm');
-            const loginBtn = document.getElementById('loginBtn');
-            
-            if (loginForm && loginBtn) {
-                loginForm.addEventListener('submit', function(e) {
-                    // Basic client-side validation
-                    const email = document.querySelector('input[name="Email"]');
-                    const password = document.querySelector('input[name="Password"]');
-                    
-                    if (!email.value.trim() || !password.value.trim()) {
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    const email = document.getElementById('Email');
+                    if (!email.value.trim() || !pwd.value.trim()) {
                         e.preventDefault();
-                        showValidationSummary('Please fill in all required fields.');
-                        return false;
+                        showSummary('Please fill in all required fields.');
+                        return;
                     }
-                    
-                    // Show loading state
-                    loginBtn.disabled = true;
-                    const originalContent = loginBtn.innerHTML;
-                    loginBtn.dataset.original = originalContent;
-                    loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in...';
-                    
-                    // Reset button state if form submission fails (fallback)
-                    setTimeout(function() {
-                        if (loginBtn.disabled && loginBtn.dataset.original) {
-                            loginBtn.disabled = false;
-                            loginBtn.innerHTML = loginBtn.dataset.original;
-                        }
-                    }, 10000); // 10 second timeout
-                });
-            }
-
-            // Function to show validation summary
-            function showValidationSummary(message) {
-                const validationSummary = document.querySelector('[asp-validation-summary]');
-                if (validationSummary) {
-                    validationSummary.innerHTML = '<ul><li>' + message + '</li></ul>';
-                    validationSummary.style.display = 'block';
-                }
-            }
-
-            // Hide validation summary when user starts typing
-            const inputs = document.querySelectorAll('input[type="email"], input[type="password"]');
-            inputs.forEach(function(input) {
-                input.addEventListener('input', function() {
-                    const validationSummary = document.querySelector('[asp-validation-summary]');
-                    if (validationSummary && validationSummary.style.display !== 'none') {
-                        validationSummary.style.display = 'none';
+                    if (btn) {
+                        btn.disabled = true;
+                        const original = btn.innerHTML;
+                        btn.dataset.original = original;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in...';
+                        setTimeout(function () {
+                            if (btn.disabled && btn.dataset.original) {
+                                btn.disabled = false;
+                                btn.innerHTML = btn.dataset.original;
+                            }
+                        }, 8000);
                     }
                 });
-            });
-        });
+            }
+        })();
     </script>
 }
