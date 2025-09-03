@@ -22,11 +22,7 @@
 
 /* Brand */
 .brand { letter-spacing:.2px; }
-.brand-dot {
-  width:12px; height:12px; border-radius:999px; display:inline-block;
-  background: linear-gradient(135deg, var(--neo-accent), var(--neo-accent-2));
-  box-shadow: 0 0 18px rgba(139,92,246,.6);
-}
+
 .text-accent {
   background: linear-gradient(90deg, var(--neo-accent), var(--neo-accent-2));
   -webkit-background-clip:text; background-clip:text; color:transparent;
@@ -88,7 +84,7 @@ a, .link-neo {
 }
 a:hover, .link-neo:hover {
   color: var(--neo-purple);
-  text-decoration: underline;
+  text-decoration: none;   /* ⬅ no underline */
 }
 
 /* Navbar tweaks */
@@ -101,4 +97,39 @@ a:hover, .link-neo:hover {
   background: #000;
   border-top: 1px solid var(--neo-border);
   color: var(--neo-text);
+  font-size: .95rem;
+}
+
+.footer-links a {
+  color: var(--neo-purple-soft);
+  text-decoration: none;
+  font-weight: 500;
+}
+.footer-links a:hover {
+  color: var(--neo-purple);
+  text-decoration: none;
+}
+
+.social-link {
+  color: var(--neo-purple-soft);
+  font-size: 1.2rem;
+  transition: color .2s ease, transform .2s ease;
+}
+.social-link:hover {
+  color: var(--neo-purple);
+  transform: translateY(-2px);
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: .3px;
+}
+
+.brand-white {
+  color: #fff;
+}
+
+.brand-purple {
+  color: var(--neo-purple); /* or var(--neo-accent) for gradient purple */
 }
