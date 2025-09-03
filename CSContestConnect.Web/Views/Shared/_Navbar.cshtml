@@ -1,0 +1,89 @@
+@* Views/Shared/_Navbar.cshtml *@
+@{
+    // optional: expose an "active" helper via ViewData["Active"]
+    var active = (string?)(ViewData["Active"] ?? "");
+}
+
+<nav class="navbar navbar-expand-lg navbar-dark nav-glass shadow-sm sticky-top">
+    <div class="container-xxl px-4 px-md-5">
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold brand"
+           asp-controller="Home" asp-action="Index" aria-label="CSContestConnect">
+            <span class="brand-dot"></span>
+            <span>CSContest<span class="text-accent">Connect</span></span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
+                aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="topNav" class="collapse navbar-collapse">
+            <!-- Left: Primary links -->
+            <ul class="navbar-nav me-auto gap-lg-1">
+                <li class="nav-item">
+                    <a class="nav-link nav-link-neo @(active=="Home"?"active":"")"
+                       asp-controller="Home" asp-action="Index">
+                        Home
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link nav-link-neo"
+                       href="">
+                        Moderator Events
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link nav-link-neo"
+                       href="">
+                       Global Contests
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link nav-link-neo @(active=="About"?"active":"")"
+                       asp-controller="Home" asp-action="About">
+                         About
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Right: Auth / CTA -->
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <li class="nav-item">
+                        <a class="btn btn-ghost-neo btn-sm" asp-controller="Events" asp-action="Create">
+                            <i class="bi bi-plus-lg"></i> Post an Event
+                        </a>
+                    </li>
+                    <li class="nav-item d-none d-lg-block">
+                        <span class="nav-link text-muted">Hi, @User.Identity!.Name!</span>
+                    </li>
+                    <li class="nav-item">
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-neo btn-sm">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-neo" asp-controller="Account" asp-action="Login">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-neo btn-sm" asp-controller="Account" asp-action="Register">
+                            <i class="bi bi-person-plus"></i> Sign up
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
