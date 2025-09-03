@@ -1,32 +1,85 @@
-/* ===== Purple + Black Theme (Bootstrap friendly) ===== */
-:root {
-  --neo-bg: #0a0a10;
-  --neo-surface: rgba(255, 255, 255, 0.06);
-  --neo-surface-2: rgba(255, 255, 255, 0.04);
-  --neo-border: rgba(255, 255, 255, 0.12);
-  --neo-text: #e7e7f0;
-  --neo-muted: #a3a3b2;
 
-  --neo-purple: #8b5cf6;     /* primary */
-  --neo-purple-strong: #6d28d9;
-  --neo-purple-soft: #a78bfa;
-  --neo-cyan-soft: #60a5fa;  /* for gradient accent */
+:root {
+  --neo-bg: #000000;        /* pure black */
+  --neo-surface: rgba(17,19,38,.6);
+  --neo-border: rgba(117, 93, 198, .28);
+  --neo-accent: #8b5cf6;   /* purple */
+  --neo-accent-2: #6d28d9; /* deeper purple */
+  --neo-text: #f5f5f5;
+  --neo-purple-soft: #c4b5fd;
+  --neo-purple: #8b5cf6;
+  --neo-purple-strong: #7c3aed;
+  --neo-cyan-soft: #22d3ee;
 }
 
-/* Body background: deep black with faint purple glow */
-.neo-body {
+/* Glassy, subtle gradient navbar */
+.nav-glass {
   background:
-    radial-gradient(900px 450px at 0% 0%, rgba(139,92,246,.18), transparent 55%),
-    radial-gradient(700px 350px at 100% 10%, rgba(96,165,250,.12), transparent 55%),
-    var(--neo-bg);
+    linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.8));
+  backdrop-filter: blur(8px) saturate(120%);
+  border-bottom: 1px solid var(--neo-border);
+}
+
+/* Brand */
+.brand { letter-spacing:.2px; }
+.brand-dot {
+  width:12px; height:12px; border-radius:999px; display:inline-block;
+  background: linear-gradient(135deg, var(--neo-accent), var(--neo-accent-2));
+  box-shadow: 0 0 18px rgba(139,92,246,.6);
+}
+.text-accent {
+  background: linear-gradient(90deg, var(--neo-accent), var(--neo-accent-2));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
+/* Links */
+.nav-link-neo {
+  position: relative;
+  padding: .5rem .75rem;
+  border-radius: .5rem;
+}
+.nav-link-neo:hover { background: rgba(255,255,255,.06); }
+.nav-link-neo.active {
+  background: rgba(255,255,255,.1);
+  box-shadow: inset 0 0 0 1px rgba(139,92,246,.25);
+}
+.nav-link-neo::after {
+  content:""; position:absolute; left:.75rem; right:.75rem; bottom:.3rem; height:2px;
+  border-radius:2px; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--neo-accent), var(--neo-accent-2));
+  transition: transform .18s ease;
+}
+.nav-link-neo:hover::after { transform: scaleX(1); }
+
+/* Buttons to match the theme */
+.btn-neo {
+  background: linear-gradient(90deg, var(--neo-accent), var(--neo-accent-2));
+  border: none; color: #fff; font-weight: 700;
+  box-shadow: 0 8px 24px rgba(139,92,246,.35);
+}
+.btn-neo:hover { filter: brightness(1.05); color:#fff; }
+.btn-outline-neo {
+  border:1px solid rgba(139,92,246,.35); color:#e8e8ff; background: transparent;
+}
+.btn-outline-neo:hover {
+  border-color: var(--neo-accent); color:#fff; background: rgba(139,92,246,.15);
+}
+.btn-ghost-neo {
+  border:1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.04);
+  color:#fff; font-weight:700;
+}
+.btn-ghost-neo:hover { background: rgba(255,255,255,.08); }
+
+/* Body background: pure black with faint glow */
+.neo-body {
+  background: var(--neo-bg);
   color: var(--neo-text);
   min-height: 100vh;
 }
 
-/* Nav (dark with subtle gradient) */
-.bg-neo {
-  background: linear-gradient(90deg, #0b0b12, #11111a);
-}
+/* Navbar dark background */
+.bg-neo { background: #000; }
 
 /* Links */
 a, .link-neo {
@@ -38,117 +91,14 @@ a:hover, .link-neo:hover {
   text-decoration: underline;
 }
 
-/* Navbar tweaks for dark mode */
-.navbar-dark .nav-link {
-  color: #e5e7eb;
-}
+/* Navbar tweaks */
+.navbar-dark .nav-link { color: #e5e7eb; }
 .navbar-dark .nav-link:hover,
-.navbar-dark .nav-link:focus {
-  color: var(--neo-purple-soft);
-}
+.navbar-dark .nav-link:focus { color: var(--neo-purple-soft); }
 
 /* Footer */
 .footer-neo {
-  background: #0b0b12;
+  background: #000;
   border-top: 1px solid var(--neo-border);
-}
-
-/* ===== Components used in Index ===== */
-
-/* Fancy gradient title text */
-.text-gradient {
-  background: linear-gradient(90deg, var(--neo-purple-soft), var(--neo-cyan-soft));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* “Neo” buttons */
-.btn-neo {
-  background: var(--neo-purple);
-  border-color: var(--neo-purple);
-  color: #fff;
-  box-shadow: 0 8px 30px rgba(139,92,246,.35);
-}
-.btn-neo:hover {
-  background: var(--neo-purple-strong);
-  border-color: var(--neo-purple-strong);
-  color: #fff;
-}
-
-.btn-outline-neo {
-  color: var(--neo-purple);
-  border-color: var(--neo-purple);
-  background: transparent;
-}
-.btn-outline-neo:hover {
-  color: #fff;
-  background: var(--neo-purple);
-  border-color: var(--neo-purple);
-}
-
-/* Badges & soft accents */
-.badge-neo {
-  background: rgba(139,92,246,.15);
-  color: var(--neo-purple-soft);
-  border: 1px solid rgba(139,92,246,.35);
-  border-radius: 999px;
-  padding: .4rem .7rem;
-  font-weight: 600;
-}
-.bg-neo-soft {
-  background: rgba(139,92,246,.18) !important;
-  color: #e9d5ff !important;
-}
-
-/* Cards with glass look */
-.glass-card {
-  background: var(--neo-surface);
-  border: 1px solid var(--neo-border);
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(139,92,246,.18);
-}
-.hr-soft {
-  border-color: var(--neo-border);
-}
-
-/* Stats */
-.stat .stat-value {
-  font-weight: 800;
-  font-size: 1.75rem;
-  color: #e9d5ff;
-}
-.stat .stat-label {
-  color: var(--neo-muted);
-  font-size: .9rem;
-}
-
-/* Role chips */
-.role-chip {
-  background: rgba(139,92,246,.15);
-  border: 1px solid rgba(139,92,246,.35);
-  color: #d8b4fe;
-  border-radius: 999px;
-  padding: .3rem .6rem;
-  font-weight: 500;
-}
-
-/* Table on glass */
-.glass-table {
-  background: var(--neo-surface-2);
-  border: 1px solid var(--neo-border);
-  border-radius: 12px;
-}
-.glass-table .table {
   color: var(--neo-text);
-  margin-bottom: 0;
-}
-.glass-table .table thead th {
-  color: #c7d2fe;
-  border-color: var(--neo-border);
-}
-.glass-table .table td, 
-.glass-table .table th {
-  border-color: var(--neo-border);
 }
