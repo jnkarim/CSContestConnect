@@ -1,32 +1,154 @@
-html {
-  font-size: 14px;
+/* ===== Purple + Black Theme (Bootstrap friendly) ===== */
+:root {
+  --neo-bg: #0a0a10;
+  --neo-surface: rgba(255, 255, 255, 0.06);
+  --neo-surface-2: rgba(255, 255, 255, 0.04);
+  --neo-border: rgba(255, 255, 255, 0.12);
+  --neo-text: #e7e7f0;
+  --neo-muted: #a3a3b2;
+
+  --neo-purple: #8b5cf6;     /* primary */
+  --neo-purple-strong: #6d28d9;
+  --neo-purple-soft: #a78bfa;
+  --neo-cyan-soft: #60a5fa;  /* for gradient accent */
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+/* Body background: deep black with faint purple glow */
+.neo-body {
+  background:
+    radial-gradient(900px 450px at 0% 0%, rgba(139,92,246,.18), transparent 55%),
+    radial-gradient(700px 350px at 100% 10%, rgba(96,165,250,.12), transparent 55%),
+    var(--neo-bg);
+  color: var(--neo-text);
+  min-height: 100vh;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* Nav (dark with subtle gradient) */
+.bg-neo {
+  background: linear-gradient(90deg, #0b0b12, #11111a);
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+/* Links */
+a, .link-neo {
+  color: var(--neo-purple-soft);
+  text-decoration: none;
+}
+a:hover, .link-neo:hover {
+  color: var(--neo-purple);
+  text-decoration: underline;
 }
 
-body {
-  margin-bottom: 60px;
+/* Navbar tweaks for dark mode */
+.navbar-dark .nav-link {
+  color: #e5e7eb;
+}
+.navbar-dark .nav-link:hover,
+.navbar-dark .nav-link:focus {
+  color: var(--neo-purple-soft);
 }
 
-.btn-purple {
-  background-color: #6a0dad;
+/* Footer */
+.footer-neo {
+  background: #0b0b12;
+  border-top: 1px solid var(--neo-border);
+}
+
+/* ===== Components used in Index ===== */
+
+/* Fancy gradient title text */
+.text-gradient {
+  background: linear-gradient(90deg, var(--neo-purple-soft), var(--neo-cyan-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* “Neo” buttons */
+.btn-neo {
+  background: var(--neo-purple);
+  border-color: var(--neo-purple);
+  color: #fff;
+  box-shadow: 0 8px 30px rgba(139,92,246,.35);
+}
+.btn-neo:hover {
+  background: var(--neo-purple-strong);
+  border-color: var(--neo-purple-strong);
   color: #fff;
 }
 
-.btn-purple:hover {
-  background-color: #4b007f;
+.btn-outline-neo {
+  color: var(--neo-purple);
+  border-color: var(--neo-purple);
+  background: transparent;
+}
+.btn-outline-neo:hover {
   color: #fff;
+  background: var(--neo-purple);
+  border-color: var(--neo-purple);
+}
+
+/* Badges & soft accents */
+.badge-neo {
+  background: rgba(139,92,246,.15);
+  color: var(--neo-purple-soft);
+  border: 1px solid rgba(139,92,246,.35);
+  border-radius: 999px;
+  padding: .4rem .7rem;
+  font-weight: 600;
+}
+.bg-neo-soft {
+  background: rgba(139,92,246,.18) !important;
+  color: #e9d5ff !important;
+}
+
+/* Cards with glass look */
+.glass-card {
+  background: var(--neo-surface);
+  border: 1px solid var(--neo-border);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(139,92,246,.18);
+}
+.hr-soft {
+  border-color: var(--neo-border);
+}
+
+/* Stats */
+.stat .stat-value {
+  font-weight: 800;
+  font-size: 1.75rem;
+  color: #e9d5ff;
+}
+.stat .stat-label {
+  color: var(--neo-muted);
+  font-size: .9rem;
+}
+
+/* Role chips */
+.role-chip {
+  background: rgba(139,92,246,.15);
+  border: 1px solid rgba(139,92,246,.35);
+  color: #d8b4fe;
+  border-radius: 999px;
+  padding: .3rem .6rem;
+  font-weight: 500;
+}
+
+/* Table on glass */
+.glass-table {
+  background: var(--neo-surface-2);
+  border: 1px solid var(--neo-border);
+  border-radius: 12px;
+}
+.glass-table .table {
+  color: var(--neo-text);
+  margin-bottom: 0;
+}
+.glass-table .table thead th {
+  color: #c7d2fe;
+  border-color: var(--neo-border);
+}
+.glass-table .table td, 
+.glass-table .table th {
+  border-color: var(--neo-border);
 }

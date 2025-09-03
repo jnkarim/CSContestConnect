@@ -2285,19 +2285,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ASUS\\.nuget\\packages\\": {}
+    "C:\\Users\\yeash\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
+      "projectUniqueName": "D:\\pain\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
       "projectName": "CSContestConnect.Web",
-      "projectPath": "E:\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
-      "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-      "outputPath": "E:\\CSContestConnect\\CSContestConnect.Web\\obj\\",
+      "projectPath": "D:\\pain\\CSContestConnect\\CSContestConnect.Web\\CSContestConnect.Web.csproj",
+      "packagesPath": "C:\\Users\\yeash\\.nuget\\packages\\",
+      "outputPath": "D:\\pain\\CSContestConnect\\CSContestConnect.Web\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\yeash\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"

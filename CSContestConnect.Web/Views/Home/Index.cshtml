@@ -1,8 +1,178 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "CSContestConnect";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero container-xxl px-4 px-md-5 py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <div class="badge badge-neo mb-3">
+                <i class="bi bi-lightning-charge"></i> Hackathons • ICPC • University Contests
+            </div>
+            <h1 class="display-4 fw-bold lh-tight text-gradient">
+                Run, Moderate & Compete — all in one place.
+            </h1>
+            <p class="lead text-muted mt-3">
+                <strong>CSContestConnect</strong> is a full-stack .NET + PostgreSQL platform for managing programming contests.
+                Roles for <span class="text-white">Admins</span>, <span class="text-white">Moderators</span>, and <span class="text-white">Users</span>.
+                Create contests, schedule rounds, auto-rank, and reward winners—effortlessly.
+            </p>
+            <div class="d-flex gap-3 mt-4">
+                <a class="btn btn-neo btn-lg" asp-controller="Contests" asp-action="Create">
+                    <i class="bi bi-plus-circle"></i> Create Contest
+                </a>
+                <a class="btn btn-outline-neo btn-lg" asp-controller="Contests" asp-action="Index">
+                    <i class="bi bi-trophy"></i> Browse Contests
+                </a>
+            </div>
+            <div class="mt-4 small text-muted">
+                Built with ASP.NET Core, EF Core, and Npgsql. Secure auth • Role-based access • Postgres-powered.
+            </div>
+        </div>
+        <div class="col-lg-5 mt-5 mt-lg-0">
+            <div class="glass-card p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0">Quick Stats</h5>
+                    <span class="text-muted small">live</span>
+                </div>
+                <hr class="hr-soft my-3" />
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="stat">
+                            <div class="stat-value">42</div>
+                            <div class="stat-label">Active Contests</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat">
+                            <div class="stat-value">3.2k</div>
+                            <div class="stat-label">Registered Users</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat">
+                            <div class="stat-value">128</div>
+                            <div class="stat-label">Problems Online</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat">
+                            <div class="stat-value">99.9%</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 d-flex gap-2">
+                    <span class="role-chip"><i class="bi bi-shield-lock"></i> Admin</span>
+                    <span class="role-chip"><i class="bi bi-people"></i> Moderator</span>
+                    <span class="role-chip"><i class="bi bi-person"></i> User</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container-xxl px-4 px-md-5 py-5">
+    <div class="row g-4">
+        <div class="col-12 col-lg-4">
+            <div class="feature-card h-100">
+                <div class="feature-icon"><i class="bi bi-calendar2-range"></i></div>
+                <h5>Contest Orchestration</h5>
+                <p class="text-muted">Create rounds, set time limits, control visibility, and automate registrations.</p>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="feature-card h-100">
+                <div class="feature-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                <h5>Real-Time Ranking</h5>
+                <p class="text-muted">Live scoreboard with penalties, tie-breaks, and custom scoring rules.</p>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="feature-card h-100">
+                <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+                <h5>RBAC + Audit</h5>
+                <p class="text-muted">Role-based access for Admins/Moderators/Users with full audit trails.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container-xxl px-4 px-md-5 pb-5">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="mb-0">Upcoming Contests</h3>
+        <a class="btn btn-sm btn-outline-neo" asp-controller="Contests" asp-action="Index">
+            View All <i class="bi bi-arrow-right-short"></i>
+        </a>
+    </div>
+    <div class="table-responsive glass-table">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Starts</th>
+                    <th>Duration</th>
+                    <th>Mode</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Replace with real data from your model -->
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-trophy-fill"></i>
+                            Fall Hackathon 2025
+                            <span class="badge bg-neo-soft ms-2">Open</span>
+                        </div>
+                    </td>
+                    <td>Sep 20, 2025 • 18:00</td>
+                    <td>3h</td>
+                    <td>Online</td>
+                    <td class="text-end">
+                        <a class="btn btn-neo btn-sm" asp-controller="Contests" asp-action="Details" asp-route-id="1">
+                            Register
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-code-square"></i>
+                            University Cup — Round 1
+                        </div>
+                    </td>
+                    <td>Oct 02, 2025 • 10:00</td>
+                    <td>2h</td>
+                    <td>Onsite</td>
+                    <td class="text-end">
+                        <a class="btn btn-outline-neo btn-sm" href="#">Details</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-bezier2"></i>
+                            ICPC Regionals Practice
+                        </div>
+                    </td>
+                    <td>Oct 15, 2025 • 15:00</td>
+                    <td>5h</td>
+                    <td>Online</td>
+                    <td class="text-end">
+                        <button class="btn btn-outline-neo btn-sm" disabled>Closed</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="container-xxl px-4 px-md-5 pb-6">
+    <div class="cta-card text-center p-5">
+        <h3 class="mb-2">Ready to host your next contest?</h3>
+        <p class="text-muted mb-4">Spin up problem sets, schedule windows, and watch the live board climb.</p>
+        <a class="btn btn-neo btn-lg" asp-controller="Account" asp-action="Register">
+            <i class="bi bi-person-plus"></i> Get Started
+        </a>
+    </div>
+</section>
