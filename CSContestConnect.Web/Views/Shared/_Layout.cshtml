@@ -8,75 +8,81 @@
     <!-- Bootstrap -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <!-- Bootstrap Icons (needed for .bi icons used in your Home page) -->
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
-    <!-- Site styles (our purple/black theme + components live here) -->
+    <!-- Site styles -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CSContestConnect.Web.styles.css" asp-append-version="true" />
+
+    @* Page-specific styles (like auth.css) *@
+    @await RenderSectionAsync("Styles", required: false)
+    
 </head>
 <body class="neo-body">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-neo border-0 shadow-sm sticky-top">
-            <div class="container-xxl px-4 px-md-5">
-                <a class="navbar-brand fw-semibold text-gradient" asp-area="" asp-controller="Home" asp-action="Index">
-                    CSContestConnect
-                </a>
+    @if (ViewBag.HideNavbar != true)
+    {
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-dark bg-neo border-0 shadow-sm sticky-top">
+                <div class="container-xxl px-4 px-md-5">
+                    <a class="navbar-brand fw-semibold text-gradient" asp-area="" asp-controller="Home" asp-action="Index">
+                        CSContestConnect
+                    </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
-                        aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
+                            aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
 
-                <div id="topNav" class="collapse navbar-collapse">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
-                                <i class="bi bi-house-door"></i> Home
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">
-                                <i class="bi bi-shield-lock"></i> Privacy
-                            </a>
-                        </li>
-                    </ul>
-
-                    <!-- Auth (right) -->
-                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                        @if (User.Identity?.IsAuthenticated ?? false)
-                        {
+                    <div id="topNav" class="collapse navbar-collapse">
+                        <ul class="navbar-nav me-auto">
                             <li class="nav-item">
-                                <span class="nav-link text-muted">Hello, @User.Identity!.Name!</span>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-neo btn-sm">
-                                        <i class="bi bi-box-arrow-right"></i> Logout
-                                    </button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">
-                                    <i class="bi bi-box-arrow-in-right"></i> Login
+                                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-house-door"></i> Home
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-neo btn-sm" asp-controller="Account" asp-action="Register">
-                                    <i class="bi bi-person-plus"></i> Sign up
+                                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                    <i class="bi bi-shield-lock"></i> Privacy
                                 </a>
                             </li>
-                        }
-                    </ul>
+                        </ul>
+
+                        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                            @if (User.Identity?.IsAuthenticated ?? false)
+                            {
+                                <li class="nav-item">
+                                    <span class="nav-link text-muted">Hello, @User.Identity!.Name!</span>
+                                </li>
+                                <li class="nav-item">
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-neo btn-sm">
+                                            <i class="bi bi-box-arrow-right"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Account" asp-action="Login">
+                                        <i class="bi bi-box-arrow-in-right"></i> Login
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="btn btn-neo btn-sm" asp-controller="Account" asp-action="Register">
+                                        <i class="bi bi-person-plus"></i> Sign up
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
+            </nav>
+        </header>
+    }
 
     <main role="main" class="container-xxl px-4 px-md-5 py-4">
         @RenderBody()
