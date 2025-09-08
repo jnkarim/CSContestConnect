@@ -76,6 +76,30 @@ namespace CSContestConnect.Web.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public IActionResult AdminLogin()
+        {
+            ViewData["ErrorMessage"] = null;
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult AdminLogin(string Email, string Password)
+        {
+            // Hardcoded admin credentials
+            const string adminEmail = "admin@gmail.com";
+            const string adminPassword = "123456";
+
+            if (Email == adminEmail && Password == adminPassword)
+            {
+                // You can set a temp cookie/session here if needed
+                return RedirectToAction("Index", "Admin"); // Redirect to Admin panel
+            }
+
+            ViewData["ErrorMessage"] = "Invalid admin login attempt.";
+            return View();
+        }
+
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> Logout()
