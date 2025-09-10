@@ -1,0 +1,170 @@
+/* ============================
+   Admin Dashboard Custom CSS
+   ============================ */
+
+/* Global settings */
+body {
+    font-family: "Inter", "Segoe UI", "Helvetica Neue", sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+/* Page header */
+h1.h3 {
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 0.25rem;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    margin-top: 0.25rem;
+    background-color: transparent;
+    padding: 0;
+}
+.breadcrumb .breadcrumb-item a {
+    text-decoration: none;
+    color: var(--bs-primary);
+    transition: color 0.2s;
+}
+.breadcrumb .breadcrumb-item a:hover {
+    color: var(--bs-primary-dark);
+}
+.breadcrumb .breadcrumb-item.active {
+    color: var(--bs-secondary);
+}
+
+/* Cards */
+.card {
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    background-color: #fff;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+.card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-weight: 500;
+    background-color: transparent;
+}
+
+/* KPI card numbers */
+.card-body h3 {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+/* Badges inside KPI cards */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.65em;
+    border-radius: 0.5rem;
+}
+
+/* Tables */
+.table > :not(caption) > * > * {
+    vertical-align: middle;
+}
+.table thead th {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.table tbody td .fw-semibold {
+    font-weight: 600;
+}
+.table tbody td .small {
+    color: var(--bs-secondary);
+    font-size: 0.8rem;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.6rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.btn:hover {
+    transform: translateY(-1px);
+}
+.btn-outline-secondary:hover {
+    background-color: var(--bs-gray-100);
+}
+
+/* Offcanvas filters */
+.offcanvas {
+    max-width: 360px;
+}
+.offcanvas-header {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.offcanvas-title {
+    font-weight: 600;
+}
+.offcanvas-body label.form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+/* List group for activity */
+.list-group-item {
+    border: none;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+.list-group-item:not(:last-child) {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.list-group-item .fw-medium {
+    font-weight: 600;
+}
+.list-group-item .small {
+    font-size: 0.8rem;
+    color: var(--bs-secondary);
+}
+
+/* Navbar tweaks */
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+.navbar-nav .nav-link {
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: var(--bs-primary);
+}
+
+/* Offcanvas buttons & inputs */
+.offcanvas-body .form-control,
+.offcanvas-body .form-select {
+    border-radius: 0.5rem;
+}
+
+/* Utility spacing tweaks */
+.gap-2 > * {
+    min-width: max-content;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .card-body h3 {
+        font-size: 1.25rem;
+    }
+    .btn {
+        font-size: 0.875rem;
+    }
+    .table-responsive {
+        overflow-x: auto;
+    }
+}
