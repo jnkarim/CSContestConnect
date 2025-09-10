@@ -24,4 +24,5 @@ namespace CSContestConnect.Web.Models
 
         public bool RememberMe { get; set; }
     }
+    
 }

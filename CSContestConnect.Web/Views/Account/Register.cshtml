@@ -114,78 +114,34 @@
                         </label>
                     </div>
 
-                    <!-- Submit -->
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-gradient py-3" id="registerBtn">
-                            Create account
-                        </button>
-                    </div>
+                 <!-- ... existing code ... -->
 
-                    <p class="tiny mt-3 mb-0">
-                        Already have an account? <a asp-controller="Account" asp-action="Login" class="link-accent">Sign in</a>
-                    </p>
-                </form>
-            </div>
-        </div>
-    </div>
+<!-- Submit -->
+<div class="d-grid">
+    <button type="submit" class="btn btn-gradient py-3" id="registerBtn">
+        Create account
+    </button>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        (function () {
-            const form = document.getElementById('registerForm');
-            const btn = document.getElementById('registerBtn');
-            const pwd = document.getElementById('Password');
-            const cpw = document.getElementById('ConfirmPassword');
-            const togglePwd = document.getElementById('toggleRegPassword');
-            const toggleCpw = document.getElementById('toggleRegConfirm');
-            const summary = document.querySelector('[asp-validation-summary]') || document.querySelector('.alert-danger');
+<!-- Close the main form FIRST -->
+</form>
 
-            function showSummary(msg) {
-                if (!summary) return;
-                summary.textContent = msg;
-                summary.classList.remove('d-none');
-            }
-            function toggle(button, input) {
-                if (!button || !input) return;
-                button.addEventListener('click', function () {
-                    const isPwd = input.getAttribute('type') === 'password';
-                    input.setAttribute('type', isPwd ? 'text' : 'password');
-                    button.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
-                    button.innerHTML = isPwd ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-                });
-            }
-            toggle(togglePwd, pwd);
-            toggle(toggleCpw, cpw);
+<!-- THEN add the Google login form -->
+<div class="text-center my-3">
+    <span class="text-muted small">or</span>
+</div>
 
-            if (form) {
-                form.addEventListener('submit', function (e) {
-                    const email = document.getElementById('Email');
-                    if (!email.value.trim() || !pwd.value.trim() || !cpw.value.trim()) {
-                        e.preventDefault();
-                        showSummary('Please fill in all required fields.');
-                        return;
-                    }
-                    if (pwd.value !== cpw.value) {
-                        e.preventDefault();
-                        showSummary('Passwords do not match.');
-                        return;
-                    }
-                    if (btn) {
-                        btn.disabled = true;
-                        const original = btn.innerHTML;
-                        btn.dataset.original = original;
-                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating account...';
-                        setTimeout(function () {
-                            if (btn.disabled && btn.dataset.original) {
-                                btn.disabled = false;
-                                btn.innerHTML = btn.dataset.original;
-                            }
-                        }, 8000);
-                    }
-                });
-            }
-        })();
-    </script>
-}
+<!-- Google Sign-In -->
+<form asp-controller="Account" asp-action="ExternalLogin" method="post" class="mb-2">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="provider" value="Google" />
+    <input type="hidden" name="returnUrl" value="/" />
+    <button type="submit" class="btn btn-outline-dark w-100 py-2 d-flex align-items-center justify-content-center">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" width="18" height="18" class="me-2" />
+        Continue with Google
+    </button>
+</form>
+
+<p class="tiny mt-3 mb-0">
+    Already have an account? <a asp-controller="Account" asp-action="Login" class="link-accent">Sign in</a>
+</p>
