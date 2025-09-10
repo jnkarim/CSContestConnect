@@ -19,7 +19,7 @@ namespace CSContestConnect.Web.Controllers
             _signInManager = signInManager;
         }
 
-        // -------- Register (existing) --------
+        // -------- Register --------
         [HttpGet]
         [AllowAnonymous]
         public IActionResult Register()
@@ -40,6 +40,8 @@ namespace CSContestConnect.Web.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
+                // Assign a default "User" role upon registration
+                await _userManager.AddToRoleAsync(user, "User");
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return RedirectToAction("Index", "Home");
             }
@@ -50,7 +52,7 @@ namespace CSContestConnect.Web.Controllers
             return View(model);
         }
 
-        // -------- Login (existing) --------
+        // -------- Standard Login --------
         [HttpGet]
         [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
@@ -85,21 +87,17 @@ namespace CSContestConnect.Web.Controllers
             return View(model);
         }
 
-        // ======== NEW: Google External Login ========
-
-        // 1) Kick off Google OAuth challenge
+        // -------- Google External Login --------
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public IActionResult ExternalLogin(string provider, string returnUrl = "/")
         {
-            // provider should be "Google"
             var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { returnUrl });
             var props = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl!);
             return Challenge(props, provider);
         }
 
-        // 2) Handle Google callback -> create/sign-in local user
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ExternalLoginCallback(string returnUrl = "/", string? remoteError = null)
@@ -117,14 +115,12 @@ namespace CSContestConnect.Web.Controllers
                 return RedirectToAction(nameof(Login), new { returnUrl });
             }
 
-            // If already linked, just sign in
             var signInResult = await _signInManager.ExternalLoginSignInAsync(
                 info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
 
             if (signInResult.Succeeded)
                 return LocalRedirect(SafeReturnUrl(returnUrl));
 
-            // No linked account: create (or reuse) by email, then link
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -139,7 +135,7 @@ namespace CSContestConnect.Web.Controllers
                 {
                     UserName = email,
                     Email = email,
-                    EmailConfirmed = true // you can enforce confirmation later
+                    EmailConfirmed = true
                 };
                 var createRes = await _userManager.CreateAsync(user);
                 if (!createRes.Succeeded)
@@ -147,6 +143,8 @@ namespace CSContestConnect.Web.Controllers
                     TempData["ErrorMessage"] = string.Join("; ", createRes.Errors.Select(e => e.Description));
                     return RedirectToAction(nameof(Login), new { returnUrl });
                 }
+                // Also assign the "User" role to new Google sign-ups
+                await _userManager.AddToRoleAsync(user, "User");
             }
 
             var linkRes = await _userManager.AddLoginAsync(user, info);
@@ -163,7 +161,7 @@ namespace CSContestConnect.Web.Controllers
         private string SafeReturnUrl(string? returnUrl)
             => (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)) ? returnUrl! : "/";
 
-        // -------- Logout (existing) --------
+        // -------- Logout --------
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -172,5 +170,69 @@ namespace CSContestConnect.Web.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
+
+        // -------- Admin Login --------
+
+        // GET: /Account/AdminLogin
+        // Displays the custom admin login page.
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult AdminLogin()
+        {
+            return View();
+        }
+
+        // POST: /Account/AdminLogin
+        // Handles the form submission from the admin login page.
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AdminLogin(LoginViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // A stronger password that meets default Identity requirements.
+            const string adminPassword = "Admin@123456";
+
+            // Check for hardcoded admin credentials.
+            if (model.Email == "admin@gmail.com" && model.Password == adminPassword)
+            {
+                // Find or create the admin user to maintain a valid session principal.
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = true };
+                    // Use the strong password when creating the user for the first time.
+                    var createResult = await _userManager.CreateAsync(user, adminPassword);
+
+                    if (!createResult.Succeeded)
+                    {
+                        // If creation fails, display the errors. This helps in debugging.
+                        foreach (var error in createResult.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                        ViewData["ErrorMessage"] = "Could not create the default admin user. See errors for details.";
+                        return View(model);
+                    }
+                    // Assign the 'Admin' role to the newly created user.
+                    await _userManager.AddToRoleAsync(user, "Admin");
+                }
+
+                // Sign in the user.
+                await _signInManager.SignInAsync(user, isPersistent: model.RememberMe);
+                
+                // SUCCESS: Redirect to the main admin dashboard.
+                return RedirectToAction("Index", "Admin"); 
+            }
+            
+            // If credentials do not match the hardcoded values.
+            ViewData["ErrorMessage"] = "Invalid admin email or password.";
+            return View(model);
+        }
     }
 }
+
