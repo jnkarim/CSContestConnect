@@ -7,141 +7,111 @@
 <!-- Admin Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="#">Admin Panel</a>
+        <a class="navbar-brand fw-bold" asp-controller="Admin" asp-action="Index">Admin Panel</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="adminNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="/Admin/Index">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Admin/Events">Events</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Admin/Users">Users</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/Admin/Reviews">Reviews</a></li>
-            </ul>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle me-1"></i> Admin
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/Admin/Profile">Profile</a></li>
-                        <li><a class="dropdown-item" href="/Admin/Settings">Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">Logout</a></li>
-                    </ul>
-                </li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Events">Events</a></li>
+                <li class="nav-item"><a class="nav-link active" asp-controller="Admin" asp-action="Reviews">Reviews</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">Users</a></li>
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- Reviews Page Content -->
-<div class="container-fluid py-4">
-    <!-- Page header -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div>
-            <h1 class="h3 mb-1 fw-semibold">Reviews Management</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb small mb-0">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard">Admin</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Reviews</li>
-                </ol>
-            </nav>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#filtersPanel" aria-controls="filtersPanel">
-                <i class="bi bi-sliders me-1"></i> Filters
-            </button>
-        </div>
-    </div>
-
-    <!-- Reviews Table -->
-    <div class="card h-100">
-        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between">
-            <h2 class="h6 mb-0">Pending Reviews</h2>
-            <div class="d-flex gap-2">
-                <a asp-controller="Reviews" asp-action="Index" class="btn btn-sm btn-outline-secondary">Refresh</a>
+<div class="container-xxl">
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Review Queue</h5>
+                    <form class="d-flex" method="get" asp-controller="Reviews" asp-action="Index">
+                        <select name="status" class="form-select form-select-sm me-2" aria-label="Filter status">
+                            <option value="">All</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-secondary">Filter</button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    @{
+                        var reviews = ViewBag.Reviews as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+                    }
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>User</th>
+                                    <th>Rating</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @if (reviews.Any())
+                            {
+                                foreach (var r in reviews)
+                                {
+                                    string dateText = "";
+                                    if (r?.Date is DateTime dt) { dateText = dt.ToString("MMM d, yyyy"); }
+                                    else if (r?.Date != null) { dateText = r.Date.ToString(); }
+                                    var status = (string)(r?.Status ?? "");
+                                    var statusClass = (string)(r?.StatusBadgeClass ?? "text-bg-secondary");
+                            <tr>
+                                <td class="fw-semibold">@((string)(r?.Title ?? ""))</td>
+                                <td>@((string)(r?.UserName ?? ""))</td>
+                                <td>@(r?.Rating ?? "")</td>
+                                <td>@dateText</td>
+                                <td><span class="badge @statusClass">@status</span></td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a class="btn btn-sm btn-outline-secondary" asp-controller="Reviews" asp-action="Details" asp-route-id="@(r?.Id)">View</a>
+                                        <a class="btn btn-sm btn-outline-success" asp-controller="Reviews" asp-action="Approve" asp-route-id="@(r?.Id)">Approve</a>
+                                        <a class="btn btn-sm btn-outline-danger" asp-controller="Reviews" asp-action="Reject" asp-route-id="@(r?.Id)">Reject</a>
+                                    </div>
+                                </td>
+                            </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-secondary py-4">No reviews found.</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Event</th>
-                            <th>User</th>
-                            <th>Comment</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="fw-semibold">CodeFest 2026</div>
-                                <div class="small text-secondary">Global programming challenge</div>
-                            </td>
-                            <td>alice@dev.com</td>
-                            <td>Great event!</td>
-                            <td><span class="badge text-bg-warning">Pending</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check-circle"></i></button>
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="fw-semibold">Hackathon X</div>
-                                <div class="small text-secondary">AI & Systems sprint</div>
-                            </td>
-                            <td>bob@org.com</td>
-                            <td>Needs improvement.</td>
-                            <td><span class="badge text-bg-warning">Pending</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check-circle"></i></button>
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="card-footer bg-transparent small text-secondary">
-            Tip: Approve or reject reviews to keep content up-to-date.
-        </div>
-    </div>
 
-    <!-- Offcanvas Filters -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="filtersPanel" aria-labelledby="filtersPanelLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="filtersPanelLabel">Filters</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <form class="vstack gap-3">
-                <div>
-                    <label class="form-label small">Status</label>
-                    <select class="form-select">
-                        <option>Any</option>
-                        <option>Pending</option>
-                        <option>Approved</option>
-                        <option>Rejected</option>
-                    </select>
+        <!-- Sidebar Stats -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header"><h5 class="mb-0">Summary</h5></div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Pending</span>
+                        <span class="fw-semibold">@((int?)ViewBag.PendingReviews ?? 0)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Approved</span>
+                        <span class="fw-semibold">@((int?)ViewBag.ApprovedReviews ?? 0)</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-secondary">Rejected</span>
+                        <span class="fw-semibold">@((int?)ViewBag.RejectedReviews ?? 0)</span>
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label small">Event</label>
-                    <input type="text" class="form-control" placeholder="Search by event name" />
-                </div>
-                <div>
-                    <label class="form-label small">User</label>
-                    <input type="text" class="form-control" placeholder="Search by user email" />
-                </div>
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i> Apply</button>
-                    <button type="reset" class="btn btn-outline-secondary">Reset</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

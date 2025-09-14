@@ -7,73 +7,44 @@
 <!-- Admin Navbar (Consistent across all pages) -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="#">Admin Panel</a>
+        <a class="navbar-brand fw-bold" asp-controller="Admin" asp-action="Index">Admin Panel</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="adminNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="/Admin/Index">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/Admin/Events">Events</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Admin/Users">Users</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Admin/Reviews">Reviews</a></li>
-                
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link active" asp-controller="Admin" asp-action="Events">Events</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Reviews">Reviews</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">Users</a></li>
             </ul>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle me-1"></i> Admin
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/Admin/Profile">Profile</a></li>
-                        <li><a class="dropdown-item" href="/Admin/Settings">Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">Logout</a></li>
-                    </ul>
-                </li>
-            </ul>
+            <div class="d-flex">
+                <a asp-controller="Events" asp-action="Create" class="btn btn-primary">Add New Event</a>
+            </div>
         </div>
     </div>
 </nav>
 
-<!-- Events Page Content -->
-<div class="container-fluid py-4">
-    <!-- Page header -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div>
-            <h1 class="h3 mb-1 fw-semibold">Events Management</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb small mb-0">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard">Admin</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Events</li>
-                </ol>
-            </nav>
-        </div>
-        <div class="d-flex gap-2">
-            <a asp-controller="Events" asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i> New Event
-            </a>
-            <button class="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#filtersPanel" aria-controls="filtersPanel">
-                <i class="bi bi-sliders me-1"></i> Filters
-            </button>
-        </div>
-    </div>
-
-    <!-- Events Table -->
-    <div class="card h-100">
-        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between">
-            <h2 class="h6 mb-0">All Events</h2>
-            <div class="d-flex gap-2">
-                <a asp-controller="Events" asp-action="Index" class="btn btn-sm btn-outline-secondary">Refresh</a>
+<div class="container-xxl">
+    <div class="card mb-3">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">All Events</h5>
+                <form class="d-flex" method="get" asp-controller="Events" asp-action="Index">
+                    <input name="q" class="form-control form-control-sm me-2" type="search" placeholder="Search by title or location">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">Search</button>
+                </form>
             </div>
         </div>
         <div class="card-body">
+            @{
+                var events = ViewBag.Events as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+            }
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Event</th>
+                            <th>Title</th>
                             <th>Date</th>
                             <th>Location</th>
                             <th>Status</th>
@@ -81,78 +52,47 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @if (events.Any())
+                        {
+                            foreach (var e in events)
+                            {
+                                var title = (string)(e?.Title ?? "");
+                                var subtitle = (string)(e?.Subtitle ?? e?.Description ?? "");
+                                var location = (string)(e?.Location ?? "");
+                                var status = (string)(e?.Status ?? "");
+                                var statusClass = (string)(e?.StatusBadgeClass ?? "text-bg-secondary");
+                                string dateText = "";
+                                if (e?.Date is DateTime dt) { dateText = dt.ToString("MMM d, yyyy"); }
+                                else if (e?.Date != null) { dateText = e.Date.ToString(); }
                         <tr>
                             <td>
-                                <div class="fw-semibold">CodeFest 2026</div>
-                                <div class="small text-secondary">Global programming challenge</div>
+                                <div class="fw-semibold">@title</div>
+                                @if(!string.IsNullOrWhiteSpace(subtitle)){
+                                    <div class="small text-secondary">@subtitle</div>
+                                }
                             </td>
-                            <td>Oct 15, 2026</td>
-                            <td>Online</td>
-                            <td><span class="badge text-bg-success">Open</span></td>
+                            <td>@dateText</td>
+                            <td>@location</td>
+                            <td><span class="badge @statusClass">@status</span></td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                <div class="btn-group">
+                                    <a class="btn btn-sm btn-outline-secondary" asp-controller="Events" asp-action="Details" asp-route-id="@(e?.Id)">View</a>
+                                    <a class="btn btn-sm btn-outline-primary" asp-controller="Events" asp-action="Edit" asp-route-id="@(e?.Id)">Edit</a>
+                                    <a class="btn btn-sm btn-outline-danger" asp-controller="Events" asp-action="Delete" asp-route-id="@(e?.Id)">Delete</a>
+                                </div>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                <div class="fw-semibold">Hackathon X</div>
-                                <div class="small text-secondary">AI & Systems sprint</div>
-                            </td>
-                            <td>Nov 1, 2026</td>
-                            <td>New York</td>
-                            <td><span class="badge text-bg-warning">Filling</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-secondary py-4">No events found.</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
-        </div>
-        <div class="card-footer bg-transparent small text-secondary">
-            Tip: Use the Filters panel to narrow down events.
-        </div>
-    </div>
-
-    <!-- Offcanvas Filters -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="filtersPanel" aria-labelledby="filtersPanelLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="filtersPanelLabel">Filters</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <form class="vstack gap-3">
-                <div>
-                    <label class="form-label small">Status</label>
-                    <select class="form-select">
-                        <option>Any</option>
-                        <option>Open</option>
-                        <option>Filling</option>
-                        <option>Closed</option>
-                        <option>Draft</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label small">Date range</label>
-                    <div class="input-group">
-                        <input type="date" class="form-control" />
-                        <span class="input-group-text">to</span>
-                        <input type="date" class="form-control" />
-                    </div>
-                </div>
-                <div>
-                    <label class="form-label small">Location</label>
-                    <input type="text" class="form-control" placeholder="City or Online" />
-                </div>
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i> Apply</button>
-                    <button type="reset" class="btn btn-outline-secondary">Reset</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

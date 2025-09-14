@@ -7,67 +7,37 @@
 <!-- Admin Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="#">Admin Panel</a>
+        <a class="navbar-brand fw-bold" asp-controller="Admin" asp-action="Index">Admin Panel</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="adminNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="/Admin/Index">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Admin/Events">Events</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/Admin/Users">Users</a></li>
-                <li class="nav-item"><a class="nav-link" href="/Admin/Reviews">Reviews</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Events">Events</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Reviews">Reviews</a></li>
+                <li class="nav-item"><a class="nav-link active" asp-controller="Admin" asp-action="Users">Users</a></li>
             </ul>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle me-1"></i> Admin
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/Admin/Profile">Profile</a></li>
-                        <li><a class="dropdown-item" href="/Admin/Settings">Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">Logout</a></li>
-                    </ul>
-                </li>
-            </ul>
+            <div class="d-flex">
+                <a asp-controller="Users" asp-action="Create" class="btn btn-primary">Add User</a>
+            </div>
         </div>
     </div>
 </nav>
 
-<!-- Users Page Content -->
-<div class="container-fluid py-4">
-    <!-- Page header -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div>
-            <h1 class="h3 mb-1 fw-semibold">Users Management</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb small mb-0">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard">Admin</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Users</li>
-                </ol>
-            </nav>
-        </div>
-        <div class="d-flex gap-2">
-            <a asp-controller="Users" asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i> New User
-            </a>
-            <button class="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#filtersPanel" aria-controls="filtersPanel">
-                <i class="bi bi-sliders me-1"></i> Filters
-            </button>
-        </div>
-    </div>
-
-    <!-- Users Table -->
-    <div class="card h-100">
-        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between">
-            <h2 class="h6 mb-0">All Users</h2>
-            <div class="d-flex gap-2">
-                <a asp-controller="Users" asp-action="Index" class="btn btn-sm btn-outline-secondary">Refresh</a>
-            </div>
+<div class="container-xxl">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">All Users</h5>
+            <form class="d-flex" method="get" asp-controller="Users" asp-action="Index">
+                <input name="q" class="form-control form-control-sm me-2" type="search" placeholder="Search name or email">
+                <button class="btn btn-sm btn-outline-secondary" type="submit">Search</button>
+            </form>
         </div>
         <div class="card-body">
+            @{
+                var users = ViewBag.Users as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+            }
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead class="table-light">
@@ -75,83 +45,46 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Joined</th>
                             <th>Status</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
+                    @if (users.Any())
+                    {
+                        foreach (var u in users)
+                        {
+                            string joinedText = "";
+                            if (u?.Joined is DateTime dt) { joinedText = dt.ToString("MMM d, yyyy"); }
+                            else if (u?.Joined != null) { joinedText = u.Joined.ToString(); }
+                            var status = (string)(u?.Status ?? "");
+                            var statusClass = (string)(u?.StatusBadgeClass ?? "text-bg-secondary");
+                    <tr>
+                        <td class="fw-semibold">@((string)(u?.Name ?? ""))</td>
+                        <td>@((string)(u?.Email ?? ""))</td>
+                        <td>@((string)(u?.Role ?? ""))</td>
+                        <td>@joinedText</td>
+                        <td><span class="badge @statusClass">@status</span></td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a class="btn btn-sm btn-outline-secondary" asp-controller="Users" asp-action="Details" asp-route-id="@(u?.Id)">View</a>
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="Users" asp-action="Edit" asp-route-id="@(u?.Id)">Edit</a>
+                                <a class="btn btn-sm btn-outline-danger" asp-controller="Users" asp-action="Delete" asp-route-id="@(u?.Id)">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                        }
+                    }
+                    else
+                    {
                         <tr>
-                            <td>
-                                <div class="fw-semibold">Alice Smith</div>
-                                <div class="small text-secondary">Registered user</div>
-                            </td>
-                            <td>alice@dev.com</td>
-                            <td>User</td>
-                            <td><span class="badge text-bg-success">Active</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                            </td>
+                            <td colspan="6" class="text-center text-secondary py-4">No users found.</td>
                         </tr>
-                        <tr>
-                            <td>
-                                <div class="fw-semibold">Bob Johnson</div>
-                                <div class="small text-secondary">Event organizer</div>
-                            </td>
-                            <td>bob@org.com</td>
-                            <td>Organizer</td>
-                            <td><span class="badge text-bg-warning">Pending</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
-        </div>
-        <div class="card-footer bg-transparent small text-secondary">
-            Tip: Use the Filters panel to narrow down users by role or status.
-        </div>
-    </div>
-
-    <!-- Offcanvas Filters -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="filtersPanel" aria-labelledby="filtersPanelLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="filtersPanelLabel">Filters</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <form class="vstack gap-3">
-                <div>
-                    <label class="form-label small">Role</label>
-                    <select class="form-select">
-                        <option>Any</option>
-                        <option>User</option>
-                        <option>Organizer</option>
-                        <option>Admin</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label small">Status</label>
-                    <select class="form-select">
-                        <option>Any</option>
-                        <option>Active</option>
-                        <option>Pending</option>
-                        <option>Suspended</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label small">Email</label>
-                    <input type="text" class="form-control" placeholder="Search by email" />
-                </div>
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i> Apply</button>
-                    <button type="reset" class="btn btn-outline-secondary">Reset</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
