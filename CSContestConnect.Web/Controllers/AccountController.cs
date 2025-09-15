@@ -1,8 +1,13 @@
+using System.Net;
 using System.Security.Claims;
 using CSContestConnect.Web.Models;
+using CSContestConnect.Web.Models.Auth;
+using CSContestConnect.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
 
 namespace CSContestConnect.Web.Controllers
 {
@@ -10,40 +15,52 @@ namespace CSContestConnect.Web.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IEmailService _emailService;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _emailService = emailService;
         }
 
         // -------- Register --------
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult Register()
-        {
-            return View();
-        }
+        [HttpGet, AllowAnonymous]
+        public IActionResult Register() => View();
 
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
+        [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-
             var result = await _userManager.CreateAsync(user, model.Password);
+            
             if (result.Succeeded)
             {
-                // Assign a default "User" role upon registration
-                await _userManager.AddToRoleAsync(user, "User");
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("Index", "Home");
+                // Generate email confirmation token
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+                
+                var callbackUrl = Url.Action(
+                    nameof(ConfirmEmail),
+                    "Account",
+                    new { userId = user.Id, token = encodedToken },
+                    protocol: Request.Scheme);
+
+                var subject = "Confirm your email - CS Contest Connect";
+                var body = $@"
+                    <h2>Welcome to CS Contest Connect!</h2>
+                    <p>Please confirm your email by <a href='{callbackUrl}'>clicking here</a>.</p>
+                    <p>If you didn't create this account, please ignore this email.</p>";
+
+                await _emailService.SendEmailAsync(model.Email, subject, body);
+
+                // Redirect to confirmation page instead of trying to login
+                return RedirectToAction(nameof(RegisterConfirmation), new { email = model.Email });
             }
 
             foreach (var err in result.Errors)
@@ -52,22 +69,62 @@ namespace CSContestConnect.Web.Controllers
             return View(model);
         }
 
-        // -------- Standard Login --------
-        [HttpGet]
-        [AllowAnonymous]
+        // -------- Register Confirmation --------
+        [HttpGet, AllowAnonymous]
+        public IActionResult RegisterConfirmation(string email)
+        {
+            ViewData["Email"] = email;
+            return View();
+        }
+
+        // -------- Email Confirmation --------
+        [HttpGet, AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if (userId == null || token == null)
+                return RedirectToAction(nameof(Login));
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Email confirmed successfully! You can now login.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            TempData["ErrorMessage"] = "Error confirming your email.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        // -------- Login --------
+        [HttpGet, AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl ?? "/";
             return View();
         }
 
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
+        [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            
+            // Check if email is confirmed
+            if (user != null && !await _userManager.IsEmailConfirmedAsync(user))
+            {
+                ModelState.AddModelError(string.Empty, "Please confirm your email before logging in.");
                 return View(model);
+            }
 
             var result = await _signInManager.PasswordSignInAsync(
                 userName: model.Email,
@@ -79,7 +136,6 @@ namespace CSContestConnect.Web.Controllers
             {
                 if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
                     return Redirect(returnUrl);
-
                 return RedirectToAction("Index", "Home");
             }
 
@@ -87,10 +143,172 @@ namespace CSContestConnect.Web.Controllers
             return View(model);
         }
 
-        // -------- Google External Login --------
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
+        // -------- Forgot Password --------
+        [HttpGet, AllowAnonymous]
+        public IActionResult ForgotPassword() => View();
+
+        [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            
+            // Always show confirmation regardless of email existence (security best practice)
+            if (user != null && await _userManager.IsEmailConfirmedAsync(user))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+                
+                var callbackUrl = Url.Action(
+                    nameof(ResetPassword),
+                    "Account",
+                    new { email = model.Email, token = encodedToken },
+                    protocol: Request.Scheme);
+
+                var subject = "Reset your CS Contest Connect password";
+                var body = $@"
+                    <h2>Password Reset Request</h2>
+                    <p>We received a request to reset your password.</p>
+                    <p><a href='{callbackUrl}'>Click here to reset your password</a></p>
+                    <p>If you didn't request this, please ignore this email.</p>";
+                
+                await _emailService.SendEmailAsync(model.Email, subject, body);
+            }
+
+            // Always return the same confirmation message (security best practice)
+            return RedirectToAction(nameof(ForgotPasswordConfirmation));
+        }
+
+        [HttpGet, AllowAnonymous]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        // -------- Reset Password --------
+        // GET: ResetPassword (Updated)
+[HttpGet, AllowAnonymous]
+public IActionResult ResetPassword(string email, string token)
+{
+    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+    {
+        TempData["ErrorMessage"] = "Invalid password reset link.";
+        return RedirectToAction(nameof(ForgotPassword));
+    }
+
+    // Decode the token immediately to check if it's valid
+    try
+    {
+        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+        
+        // Store the decoded token in ViewData to use in the form
+        ViewData["DecodedToken"] = decodedToken;
+        
+        return View(new ResetPasswordViewModel 
+        { 
+            Email = email, 
+            Token = token // Keep the encoded token for the form
+        });
+    }
+    catch (FormatException)
+    {
+        TempData["ErrorMessage"] = "Invalid token format.";
+        return RedirectToAction(nameof(ForgotPassword));
+    }
+}
+
+// POST: ResetPassword (Updated)
+[HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+{
+    if (!ModelState.IsValid)
+        return View(model);
+
+    var user = await _userManager.FindByEmailAsync(model.Email);
+    if (user == null)
+    {
+        // Don't reveal that the user does not exist
+        return RedirectToAction(nameof(ResetPasswordConfirmation));
+    }
+
+    try
+    {
+        // Decode the token from the form submission
+        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+        
+        var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.Password);
+
+        if (result.Succeeded)
+        {
+            // Automatically sign the user in after password reset if needed
+            // await _signInManager.SignInAsync(user, isPersistent: false);
+            return RedirectToAction(nameof(ResetPasswordConfirmation));
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+    }
+    catch (FormatException)
+    {
+        ModelState.AddModelError(string.Empty, "Invalid token format. Please request a new password reset link.");
+    }
+
+    return View(model);
+}
+
+        [HttpGet, AllowAnonymous]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            TempData["SuccessMessage"] = "Your password has been reset. Please sign in.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        // -------- Resend Confirmation Email --------
+        [HttpGet, AllowAnonymous]
+        public IActionResult ResendConfirmationEmail() => View();
+
+        [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendConfirmationEmail(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                // Don't reveal that the user doesn't exist
+                TempData["SuccessMessage"] = "If your email is registered, you will receive a confirmation email.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            if (await _userManager.IsEmailConfirmedAsync(user))
+            {
+                TempData["InfoMessage"] = "Your email is already confirmed. You can login.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            
+            var callbackUrl = Url.Action(
+                nameof(ConfirmEmail),
+                "Account",
+                new { userId = user.Id, token = encodedToken },
+                protocol: Request.Scheme);
+
+            var subject = "Confirm your email - CS Contest Connect";
+            var body = $@"
+                <h2>Confirm Your Email</h2>
+                <p>Please confirm your email by <a href='{callbackUrl}'>clicking here</a>.</p>";
+
+            await _emailService.SendEmailAsync(email, subject, body);
+
+            TempData["SuccessMessage"] = "Confirmation email sent. Please check your inbox.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        // -------- External Login (Google) --------
+        [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
         public IActionResult ExternalLogin(string provider, string returnUrl = "/")
         {
             var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { returnUrl });
@@ -98,8 +316,7 @@ namespace CSContestConnect.Web.Controllers
             return Challenge(props, provider);
         }
 
-        [HttpGet]
-        [AllowAnonymous]
+        [HttpGet, AllowAnonymous]
         public async Task<IActionResult> ExternalLoginCallback(string returnUrl = "/", string? remoteError = null)
         {
             if (!string.IsNullOrEmpty(remoteError))
@@ -131,20 +348,13 @@ namespace CSContestConnect.Web.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                user = new ApplicationUser
-                {
-                    UserName = email,
-                    Email = email,
-                    EmailConfirmed = true
-                };
+                user = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true };
                 var createRes = await _userManager.CreateAsync(user);
                 if (!createRes.Succeeded)
                 {
                     TempData["ErrorMessage"] = string.Join("; ", createRes.Errors.Select(e => e.Description));
                     return RedirectToAction(nameof(Login), new { returnUrl });
                 }
-                // Also assign the "User" role to new Google sign-ups
-                await _userManager.AddToRoleAsync(user, "User");
             }
 
             var linkRes = await _userManager.AddLoginAsync(user, info);
@@ -162,77 +372,11 @@ namespace CSContestConnect.Web.Controllers
             => (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)) ? returnUrl! : "/";
 
         // -------- Logout --------
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [Authorize, HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
-
-        // -------- Admin Login --------
-
-        // GET: /Account/AdminLogin
-        // Displays the custom admin login page.
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult AdminLogin()
-        {
-            return View();
-        }
-
-        // POST: /Account/AdminLogin
-        // Handles the form submission from the admin login page.
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AdminLogin(LoginViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            // A stronger password that meets default Identity requirements.
-            const string adminPassword = "Admin@123456";
-
-            // Check for hardcoded admin credentials.
-            if (model.Email == "admin@gmail.com" && model.Password == adminPassword)
-            {
-                // Find or create the admin user to maintain a valid session principal.
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null)
-                {
-                    user = new ApplicationUser { UserName = model.Email, Email = model.Email, EmailConfirmed = true };
-                    // Use the strong password when creating the user for the first time.
-                    var createResult = await _userManager.CreateAsync(user, adminPassword);
-
-                    if (!createResult.Succeeded)
-                    {
-                        // If creation fails, display the errors. This helps in debugging.
-                        foreach (var error in createResult.Errors)
-                        {
-                            ModelState.AddModelError(string.Empty, error.Description);
-                        }
-                        ViewData["ErrorMessage"] = "Could not create the default admin user. See errors for details.";
-                        return View(model);
-                    }
-                    // Assign the 'Admin' role to the newly created user.
-                    await _userManager.AddToRoleAsync(user, "Admin");
-                }
-
-                // Sign in the user.
-                await _signInManager.SignInAsync(user, isPersistent: model.RememberMe);
-                
-                // SUCCESS: Redirect to the main admin dashboard.
-                return RedirectToAction("Index", "Admin"); 
-            }
-            
-            // If credentials do not match the hardcoded values.
-            ViewData["ErrorMessage"] = "Invalid admin email or password.";
-            return View(model);
-        }
     }
 }
-
