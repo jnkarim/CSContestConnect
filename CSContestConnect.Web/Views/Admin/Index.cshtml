@@ -1,213 +1,175 @@
 @{
-    ViewData["Title"] = "Admin Dashboard";
-    Layout = "_Layout";
-    ViewBag.HideNavbar = true; // hide main navbar for admin
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<!-- Admin Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" asp-controller="Admin" asp-action="Index">Admin Panel</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="adminNavbar">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link active" asp-controller="Admin" asp-action="Index">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Events">Events</a></li>
-                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Reviews">Reviews</a></li>
-                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">Users</a></li>
-            </ul>
-
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="adminMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle fs-5 me-2"></i> Admin
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
-                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profile</a></li>
-                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Settings">Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Login">Logout</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="h3 mb-0 text-white fw-bold">Event Management Dashboard</h2>
+        <p class="text-light-50">Welcome back! Here's an overview of your contests and activities.</p>
     </div>
-</nav>
+</div>
 
-<!-- Admin Dashboard Content -->
-<div class="container-xxl">
-    <!-- KPI Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-secondary text-uppercase small mb-1">Active Events</p>
-                        <h3 class="mb-0">@((int?)ViewBag.ActiveEventsCount ?? 0)</h3>
-                    </div>
-                    @if(ViewBag.ActiveEventsGrowth != null){
-                        <span class="badge text-bg-success align-self-start">
-                            <i class="bi bi-arrow-up-right me-1"></i>@ViewBag.ActiveEventsGrowth
-                        </span>
-                    }
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow stat-card bg-gradient-purple text-white">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-light">Active Events</h6>
+                    <h3 class="fw-bold">12</h3>
+                    <small class="text-success"><i class="fas fa-arrow-up"></i> 3 new this month</small>
                 </div>
-                <div class="card-footer bg-transparent small text-secondary">vs. last 30 days</div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-secondary text-uppercase small mb-1">Registrations</p>
-                        <h3 class="mb-0">@((int?)ViewBag.TotalRegistrations ?? 0)</h3>
-                    </div>
-                    <span class="badge text-bg-primary align-self-start"><i class="bi bi-people me-1"></i>Live</span>
-                </div>
-                <div class="card-footer bg-transparent small text-secondary">All time</div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-secondary text-uppercase small mb-1">Pending Reviews</p>
-                        <h3 class="mb-0">@((int?)ViewBag.PendingReviews ?? 0)</h3>
-                    </div>
-                    <span class="badge text-bg-warning align-self-start"><i class="bi bi-exclamation-triangle me-1"></i>Action</span>
-                </div>
-                <div class="card-footer bg-transparent small text-secondary">Moderator queue</div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card h-100">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-secondary text-uppercase small mb-1">Drafts</p>
-                        <h3 class="mb-0">@((int?)ViewBag.DraftCount ?? 0)</h3>
-                    </div>
-                    <span class="badge text-bg-secondary align-self-start"><i class="bi bi-pencil-square me-1"></i>Saved</span>
-                </div>
-                <div class="card-footer bg-transparent small text-secondary">Unpublished items</div>
+                <i class="fas fa-calendar-alt fa-2x"></i>
             </div>
         </div>
     </div>
 
-    <!-- Main rows -->
-    <div class="row g-3">
-        <!-- Upcoming Events -->
-        <div class="col-lg-8">
-            <div class="card h-100">
-                <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="mb-0">Upcoming Events</h5>
-                    <a asp-controller="Admin" asp-action="Events" class="btn btn-sm btn-outline-primary">Manage</a>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow stat-card bg-dark text-white">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-light">Total Participants</h6>
+                    <h3 class="fw-bold">2,847</h3>
+                    <small class="text-success"><i class="fas fa-arrow-up"></i> 15.2% increase</small>
                 </div>
-                <div class="card-body">
-                    @{
-                        var events = ViewBag.Events as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
-                    }
-                    <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Event</th>
-                                    <th>Date</th>
-                                    <th>Location</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            @if (events.Any())
-                            {
-                                foreach (var e in events)
-                                {
-                                    var title = (string)(e?.Title ?? "");
-                                    var subtitle = (string)(e?.Subtitle ?? e?.Description ?? "");
-                                    var location = (string)(e?.Location ?? "");
-                                    var status = (string)(e?.Status ?? "");
-                                    var statusClass = (string)(e?.StatusBadgeClass ?? "text-bg-secondary");
-                                    string dateText = "";
-                                    if (e?.Date is DateTime dt) { dateText = dt.ToString("MMM d, yyyy"); }
-                                    else if (e?.Date != null) { dateText = e.Date.ToString(); }
-                            <tr>
-                                <td>
-                                    <div class="fw-semibold">@title</div>
-                                    @if(!string.IsNullOrWhiteSpace(subtitle)){
-                                        <div class="small text-secondary">@subtitle</div>
-                                    }
-                                </td>
-                                <td>@dateText</td>
-                                <td>@location</td>
-                                <td><span class="badge @statusClass">@status</span></td>
-                                <td class="text-end">
-                                    <div class="btn-group">
-                                        <a class="btn btn-sm btn-outline-secondary" asp-controller="Events" asp-action="Details" asp-route-id="@(e?.Id)">View</a>
-                                        <a class="btn btn-sm btn-outline-primary" asp-controller="Events" asp-action="Edit" asp-route-id="@(e?.Id)">Edit</a>
-                                    </div>
-                                </td>
-                            </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="5" class="text-center text-secondary py-4">No upcoming events found.</td>
-                                </tr>
-                            }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <i class="fas fa-users fa-2x text-purple"></i>
             </div>
         </div>
+    </div>
 
-        <!-- Recent Activity -->
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">Recent Activity</h5>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow stat-card bg-dark text-white">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-light">Active Teams</h6>
+                    <h3 class="fw-bold">456</h3>
+                    <small class="text-info"><i class="fas fa-arrow-up"></i> 8.7% from last week</small>
                 </div>
-                <div class="card-body">
-                    @{
-                        var activity = ViewBag.Activity as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
-                    }
-                    @if (activity.Any())
-                    {
-                        <ul class="list-group list-group-flush">
-                        @foreach (var a in activity)
-                        {
-                            string whenText = "";
-                            if (a?.When is DateTime dta) { whenText = dta.ToString("MMM d, yyyy HH:mm"); }
-                            else if (a?.When != null) { whenText = a.When.ToString(); }
-                            <li class="list-group-item d-flex justify-content-between align-items-start">
-                                <div>
-                                    <div class="fw-semibold">@((string)(a?.Title ?? ""))</div>
-                                    @if(a?.Description != null){
-                                        <div class="small text-secondary">@a.Description</div>
-                                    }
-                                </div>
-                                <span class="badge rounded-pill text-bg-light">@whenText</span>
-                            </li>
-                        }
-                        </ul>
-                    }
-                    else
-                    {
-                        <div class="text-secondary text-center py-4">No recent activity.</div>
-                    }
+                <i class="fas fa-user-friends fa-2x text-warning"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow stat-card bg-dark text-white">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-light">Completed Contests</h6>
+                    <h3 class="fw-bold">89</h3>
+                    <small class="text-info"><i class="fas fa-trophy"></i> 5 this week</small>
                 </div>
+                <i class="fas fa-medal fa-2x text-success"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-xl-8 mb-4">
+        <div class="card bg-dark shadow">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="text-white mb-0">Event Participation Overview</h5>
+                <select class="form-select form-select-sm bg-dark text-light border-0">
+                    <option>Last 7 days</option>
+                    <option>Last 30 days</option>
+                    <option>Last 3 months</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <canvas id="participationChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 mb-4">
+        <div class="card bg-dark shadow">
+            <div class="card-header">
+                <h5 class="text-white mb-0">Event Categories</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Events Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-dark shadow">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="text-white mb-0">Recent Events</h5>
+                <a href="@Url.Action("Event", "Admin")" class="btn btn-sm btn-purple">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Event ID</th>
+                            <th>Event Name</th>
+                            <th>Category</th>
+                            <th>Participants</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#EVT001</td>
+                            <td><i class="fas fa-code text-purple me-2"></i> Algorithm Challenge</td>
+                            <td><span class="badge bg-purple">Programming</span></td>
+                            <td>245</td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>2024-01-15</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-light"><i class="fas fa-eye"></i></button>
+                                <button class="btn btn-sm btn-outline-purple"><i class="fas fa-edit"></i></button>
+                            </td>
+                        </tr>
+                        <!-- More rows... -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <script src="https://kit.fontawesome.com/a2e0e6ad56.js" crossorigin="anonymous"></script>
     <script>
-        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        // Participation Chart
+        new Chart(document.getElementById('participationChart'), {
+            type: 'line',
+            data: {
+                labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+                datasets: [{
+                    label: 'Participants',
+                    data: [120, 200, 150, 300, 250, 400, 380],
+                    borderColor: '#9b59b6',
+                    backgroundColor: 'rgba(155, 89, 182, 0.3)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            }
+        });
+
+        // Category Chart
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Programming','Database','AI/ML','Mobile'],
+                datasets: [{
+                    data: [45, 20, 25, 10],
+                    backgroundColor: ['#9b59b6','#3498db','#f1c40f','#2ecc71']
+                }]
+            }
+        });
     </script>
 }
