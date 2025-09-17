@@ -1,0 +1,150 @@
+@model CSContestConnect.Web.Models.UserProfile
+@{
+    ViewData["Title"] = "My Profile";
+    ViewData["Active"] = "Profile"; // For navbar active state
+}
+
+<div class="neo-body py-5">
+    <div class="container mt-4">
+        @if (TempData["ProfileSaved"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show bg-neo border border-neo-purple-soft" role="alert">
+                @TempData["ProfileSaved"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="row justify-content-center">
+            <!-- Profile Card -->
+            <div class="col-lg-4 mb-4">
+                <div class="card bg-neo border border-neo-border shadow-sm" style="backdrop-filter: blur(8px);">
+                    <div class="card-body text-center p-4">
+                        <img src="@(string.IsNullOrWhiteSpace(Model.ProfileImagePath) ? "/img/avatar-placeholder.png" : Model.ProfileImagePath)"
+                             alt="Profile Image"
+                             class="img-fluid rounded-circle mb-3 border border-neo-purple-soft"
+                             style="width: 200px; height: 200px; object-fit: cover;" />
+                        <h3 class="card-title text-white">@Model.FullName</h3>
+                        <p class="text-muted">@(Model.Bio ?? "No bio available")</p>
+                        <a class="btn btn-neo mt-2" asp-action="Edit">Edit Profile</a>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Website) || !string.IsNullOrWhiteSpace(Model.LinkedIn) || !string.IsNullOrWhiteSpace(Model.GitHub))
+                {
+                    <div class="card bg-neo border border-neo-border mt-3" style="backdrop-filter: blur(8px);">
+                        <div class="card-body">
+                            <h5 class="card-title text-white">Connect</h5>
+                            <div class="d-flex flex-column gap-2">
+                                @if (!string.IsNullOrWhiteSpace(Model.Website))
+                                {
+                                    <a href="@Model.Website" target="_blank" class="social-link">
+                                        <i class="bi bi-globe me-2"></i>Website
+                                    </a>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.LinkedIn))
+                                {
+                                    <a href="@Model.LinkedIn" target="_blank" class="social-link">
+                                        <i class="bi bi-linkedin me-2"></i>LinkedIn
+                                    </a>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.GitHub))
+                                {
+                                    <a href="@Model.GitHub" target="_blank" class="social-link">
+                                        <i class="bi bi-github me-2"></i>GitHub
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Details Card -->
+            <div class="col-lg-6">
+                <div class="card bg-neo border border-neo-border" style="backdrop-filter: blur(8px);">
+                    <div class="card-body p-4">
+                        <h4 class="card-title text-white mb-4">About</h4>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">Date of Birth</div>
+                            <div class="col-8 text-neo-text">@(Model.DateOfBirth?.ToString("yyyy-MM-dd") ?? "Not specified")</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">Gender</div>
+                            <div class="col-8 text-neo-text">@(Model.Gender ?? "Not specified")</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">Phone</div>
+                            <div class="col-8 text-neo-text">@(Model.Phone ?? "Not specified")</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">Location</div>
+                            <div class="col-8 text-neo-text">
+                                @{
+                                    var location = "";
+                                    if (!string.IsNullOrWhiteSpace(Model.City) && !string.IsNullOrWhiteSpace(Model.Country))
+                                    {
+                                        location = $"{Model.City}, {Model.Country}";
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(Model.City))
+                                    {
+                                        location = Model.City;
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(Model.Country))
+                                    {
+                                        location = Model.Country;
+                                    }
+                                    else
+                                    {
+                                        location = "Not specified";
+                                    }
+                                }
+                                @location
+                            </div>
+                        </div>
+
+                        <hr class="border-neo-border">
+
+                        <h4 class="card-title text-white mb-4">Education</h4>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">School</div>
+                            <div class="col-8 text-neo-text">@(Model.School ?? "Not specified")</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">College</div>
+                            <div class="col-8 text-neo-text">@(Model.College ?? "Not specified")</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">University</div>
+                            <div class="col-8 text-neo-text">@(Model.University ?? "Not specified")</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">Degree</div>
+                            <div class="col-8 text-neo-text">@(Model.Degree ?? "Not specified")</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 text-muted">Graduation Year</div>
+                            <div class="col-8 text-neo-text">@(Model.GraduationYear?.ToString() ?? "Not specified")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Optional: Add smooth transitions for dynamic content
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-5px)';
+                card.style.boxShadow = '0 8px 24px rgba(139,92,246,0.35)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.boxShadow = 'none';
+            });
+        });
+    </script>
+}
