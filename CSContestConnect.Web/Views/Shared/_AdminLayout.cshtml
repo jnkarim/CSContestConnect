@@ -21,58 +21,19 @@
         </div>
         
         <ul class="sidebar-nav">
+            @{
+                var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+            }
             <li class="nav-item">
-                <a href="@Url.Action("Index", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")">
+                <a href="@Url.Action("Index", "Admin")" class="nav-link @(currentAction == "Index" ? "active" : "")">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="@Url.Action("Events", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Events" ? "active" : "")">
+                <a href="@Url.Action("Events", "Admin")" class="nav-link @(currentAction == "Events" ? "active" : "")">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Events</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="@Url.Action("Contests", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Contests" ? "active" : "")">
-                    <i class="fas fa-code"></i>
-                    <span>Contests</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="@Url.Action("Participants", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Participants" ? "active" : "")">
-                    <i class="fas fa-users"></i>
-                    <span>Participants</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="@Url.Action("Teams", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Teams" ? "active" : "")">
-                    <i class="fas fa-user-friends"></i>
-                    <span>Teams</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="@Url.Action("Judges", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Judges" ? "active" : "")">
-                    <i class="fas fa-gavel"></i>
-                    <span>Judges</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="@Url.Action("Results", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Results" ? "active" : "")">
-                    <i class="fas fa-medal"></i>
-                    <span>Results</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="@Url.Action("Analytics", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Analytics" ? "active" : "")">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Analytics</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="@Url.Action("Settings", "Admin")" class="nav-link @(ViewContext.RouteData.Values["action"].ToString() == "Settings" ? "active" : "")">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
                 </a>
             </li>
         </ul>
@@ -95,8 +56,6 @@
                             <span>@(ViewData["UserName"] ?? "Admin User")</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="@Url.Action("Login", "Account")"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
