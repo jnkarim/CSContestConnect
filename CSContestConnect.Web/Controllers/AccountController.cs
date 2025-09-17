@@ -16,15 +16,18 @@ namespace CSContestConnect.Web.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailService _emailService;
+        private readonly IDisposableEmailService _disposableEmailService;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IEmailService emailService)
+            IEmailService emailService,
+            IDisposableEmailService disposableEmailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailService = emailService;
+            _disposableEmailService = disposableEmailService;
         }
 
         // -------- Register --------
@@ -36,7 +39,38 @@ namespace CSContestConnect.Web.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+            // Check for disposable email
+            if (_disposableEmailService.IsDisposableEmail(model.Email))
+            {
+                ModelState.AddModelError("Email", "Please use a permanent email address. Temporary emails are not allowed.");
+                return View(model);
+            }
+
+            // Check if email already exists
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                if (!existingUser.EmailConfirmed)
+                {
+                    // If user exists but email not confirmed, allow them to try again
+                    ModelState.AddModelError("Email", "An account with this email already exists but is not verified. Please check your email for the confirmation link or request a new one.");
+                    return View(model);
+                }
+                else
+                {
+                    ModelState.AddModelError("Email", "This email is already registered and verified. Please use a different email or try logging in.");
+                    return View(model);
+                }
+            }
+
+            // Create user with EmailConfirmed = false (this prevents login until verified)
+            var user = new ApplicationUser 
+            { 
+                UserName = model.Email, 
+                Email = model.Email,
+                EmailConfirmed = false // This is crucial - prevents login until verified
+            };
+
             var result = await _userManager.CreateAsync(user, model.Password);
             
             if (result.Succeeded)
@@ -53,9 +87,18 @@ namespace CSContestConnect.Web.Controllers
 
                 var subject = "Confirm your email - CS Contest Connect";
                 var body = $@"
-                    <h2>Welcome to CS Contest Connect!</h2>
-                    <p>Please confirm your email by <a href='{callbackUrl}'>clicking here</a>.</p>
-                    <p>If you didn't create this account, please ignore this email.</p>";
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                        <h2 style='color: #333;'>Welcome to CS Contest Connect!</h2>
+                        <p>Thank you for registering! To complete your registration and start using your account, please verify your email address.</p>
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{callbackUrl}' style='background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;'>
+                                Verify Email Address
+                            </a>
+                        </div>
+                        <p><strong>Important:</strong> You cannot log in to your account until your email is verified.</p>
+                        <p style='color: #666; font-size: 14px;'>If you didn't create this account, please ignore this email.</p>
+                        <p style='color: #666; font-size: 12px;'>This link will expire in 2 hours for security reasons.</p>
+                    </div>";
 
                 await _emailService.SendEmailAsync(model.Email, subject, body);
 
@@ -82,7 +125,10 @@ namespace CSContestConnect.Web.Controllers
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {
             if (userId == null || token == null)
+            {
+                TempData["ErrorMessage"] = "Invalid email confirmation link.";
                 return RedirectToAction(nameof(Login));
+            }
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -91,17 +137,24 @@ namespace CSContestConnect.Web.Controllers
                 return RedirectToAction(nameof(Login));
             }
 
+            // Check if email is already confirmed
+            if (user.EmailConfirmed)
+            {
+                TempData["InfoMessage"] = "Your email is already confirmed. You can log in.";
+                return RedirectToAction(nameof(Login));
+            }
+
             var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
             var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
             
             if (result.Succeeded)
             {
-                TempData["SuccessMessage"] = "Email confirmed successfully! You can now login.";
+                TempData["SuccessMessage"] = "Email confirmed successfully! You can now log in to your account.";
                 return RedirectToAction(nameof(Login));
             }
 
-            TempData["ErrorMessage"] = "Error confirming your email.";
-            return RedirectToAction(nameof(Login));
+            TempData["ErrorMessage"] = "Error confirming your email. The link may have expired. Please request a new confirmation email.";
+            return RedirectToAction(nameof(ResendConfirmationEmail));
         }
 
         // -------- Login --------
@@ -119,10 +172,19 @@ namespace CSContestConnect.Web.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             
-            // Check if email is confirmed
-            if (user != null && !await _userManager.IsEmailConfirmedAsync(user))
+            // Check if user exists
+            if (user == null)
             {
-                ModelState.AddModelError(string.Empty, "Please confirm your email before logging in.");
+                ModelState.AddModelError(string.Empty, "Invalid email or password.");
+                return View(model);
+            }
+
+            // Check if email is confirmed - THIS IS THE KEY CHECK
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                ModelState.AddModelError(string.Empty, "Please verify your email address before logging in. Check your inbox for the verification email.");
+                ViewData["ShowResendLink"] = true;
+                ViewData["UserEmail"] = model.Email;
                 return View(model);
             }
 
@@ -139,7 +201,7 @@ namespace CSContestConnect.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            ModelState.AddModelError(string.Empty, "Invalid email or password.");
             return View(model);
         }
 
@@ -154,7 +216,7 @@ namespace CSContestConnect.Web.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             
-            // Always show confirmation regardless of email existence (security best practice)
+            // Only send password reset if user exists AND email is confirmed
             if (user != null && await _userManager.IsEmailConfirmedAsync(user))
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -168,10 +230,17 @@ namespace CSContestConnect.Web.Controllers
 
                 var subject = "Reset your CS Contest Connect password";
                 var body = $@"
-                    <h2>Password Reset Request</h2>
-                    <p>We received a request to reset your password.</p>
-                    <p><a href='{callbackUrl}'>Click here to reset your password</a></p>
-                    <p>If you didn't request this, please ignore this email.</p>";
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                        <h2 style='color: #333;'>Password Reset Request</h2>
+                        <p>We received a request to reset your password for your CS Contest Connect account.</p>
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{callbackUrl}' style='background-color: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;'>
+                                Reset Password
+                            </a>
+                        </div>
+                        <p style='color: #666; font-size: 14px;'>If you didn't request this password reset, please ignore this email.</p>
+                        <p style='color: #666; font-size: 12px;'>This link will expire in 2 hours for security reasons.</p>
+                    </div>";
                 
                 await _emailService.SendEmailAsync(model.Email, subject, body);
             }
@@ -187,77 +256,73 @@ namespace CSContestConnect.Web.Controllers
         }
 
         // -------- Reset Password --------
-        // GET: ResetPassword (Updated)
-[HttpGet, AllowAnonymous]
-public IActionResult ResetPassword(string email, string token)
-{
-    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
-    {
-        TempData["ErrorMessage"] = "Invalid password reset link.";
-        return RedirectToAction(nameof(ForgotPassword));
-    }
-
-    // Decode the token immediately to check if it's valid
-    try
-    {
-        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
-        
-        // Store the decoded token in ViewData to use in the form
-        ViewData["DecodedToken"] = decodedToken;
-        
-        return View(new ResetPasswordViewModel 
-        { 
-            Email = email, 
-            Token = token // Keep the encoded token for the form
-        });
-    }
-    catch (FormatException)
-    {
-        TempData["ErrorMessage"] = "Invalid token format.";
-        return RedirectToAction(nameof(ForgotPassword));
-    }
-}
-
-// POST: ResetPassword (Updated)
-[HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
-public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
-{
-    if (!ModelState.IsValid)
-        return View(model);
-
-    var user = await _userManager.FindByEmailAsync(model.Email);
-    if (user == null)
-    {
-        // Don't reveal that the user does not exist
-        return RedirectToAction(nameof(ResetPasswordConfirmation));
-    }
-
-    try
-    {
-        // Decode the token from the form submission
-        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
-        
-        var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.Password);
-
-        if (result.Succeeded)
+        [HttpGet, AllowAnonymous]
+        public IActionResult ResetPassword(string email, string token)
         {
-            // Automatically sign the user in after password reset if needed
-            // await _signInManager.SignInAsync(user, isPersistent: false);
-            return RedirectToAction(nameof(ResetPasswordConfirmation));
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+            {
+                TempData["ErrorMessage"] = "Invalid password reset link.";
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            // Decode the token immediately to check if it's valid
+            try
+            {
+                var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+                
+                // Store the decoded token in ViewData to use in the form
+                ViewData["DecodedToken"] = decodedToken;
+                
+                return View(new ResetPasswordViewModel 
+                { 
+                    Email = email, 
+                    Token = token // Keep the encoded token for the form
+                });
+            }
+            catch (FormatException)
+            {
+                TempData["ErrorMessage"] = "Invalid token format.";
+                return RedirectToAction(nameof(ForgotPassword));
+            }
         }
 
-        foreach (var error in result.Errors)
+        [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
-            ModelState.AddModelError(string.Empty, error.Description);
-        }
-    }
-    catch (FormatException)
-    {
-        ModelState.AddModelError(string.Empty, "Invalid token format. Please request a new password reset link.");
-    }
+            if (!ModelState.IsValid)
+                return View(model);
 
-    return View(model);
-}
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return RedirectToAction(nameof(ResetPasswordConfirmation));
+            }
+
+            try
+            {
+                // Decode the token from the form submission
+                var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+                
+                var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.Password);
+
+                if (result.Succeeded)
+                {
+                    return RedirectToAction(nameof(ResetPasswordConfirmation));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            catch (FormatException)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid token format. Please request a new password reset link.");
+            }
+
+            return View(model);
+        }
 
         [HttpGet, AllowAnonymous]
         public IActionResult ResetPasswordConfirmation()
@@ -273,6 +338,19 @@ public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
         public async Task<IActionResult> ResendConfirmationEmail(string email)
         {
+            if (string.IsNullOrEmpty(email))
+            {
+                ModelState.AddModelError("", "Please enter your email address.");
+                return View();
+            }
+
+            // Check for disposable email again
+            if (_disposableEmailService.IsDisposableEmail(email))
+            {
+                ModelState.AddModelError("", "Please use a permanent email address. Temporary emails are not allowed.");
+                return View();
+            }
+
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -298,8 +376,16 @@ public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
 
             var subject = "Confirm your email - CS Contest Connect";
             var body = $@"
-                <h2>Confirm Your Email</h2>
-                <p>Please confirm your email by <a href='{callbackUrl}'>clicking here</a>.</p>";
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                    <h2 style='color: #333;'>Confirm Your Email</h2>
+                    <p>Please confirm your email address to complete your registration.</p>
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='{callbackUrl}' style='background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;'>
+                            Confirm Email Address
+                        </a>
+                    </div>
+                    <p style='color: #666; font-size: 12px;'>This link will expire in 2 hours for security reasons.</p>
+                </div>";
 
             await _emailService.SendEmailAsync(email, subject, body);
 
@@ -345,9 +431,17 @@ public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
                 return RedirectToAction(nameof(Login), new { returnUrl });
             }
 
+            // Check for disposable email even for Google logins
+            if (_disposableEmailService.IsDisposableEmail(email))
+            {
+                TempData["ErrorMessage"] = "Please use a permanent email address. Temporary emails are not allowed.";
+                return RedirectToAction(nameof(Login), new { returnUrl });
+            }
+
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
+                // For Google login, email is automatically verified since Google has verified it
                 user = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true };
                 var createRes = await _userManager.CreateAsync(user);
                 if (!createRes.Succeeded)

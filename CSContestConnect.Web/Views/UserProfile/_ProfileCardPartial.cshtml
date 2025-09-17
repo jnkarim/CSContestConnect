@@ -1,0 +1,68 @@
+@model CSContestConnect.Web.Models.UserProfile
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">About</h5>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">Date of Birth</div>
+            <div class="col-sm-8">@(Model.DateOfBirth?.ToString("yyyy-MM-dd") ?? "Not specified")</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">Gender</div>
+            <div class="col-sm-8">@(Model.Gender ?? "Not specified")</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">Phone</div>
+            <div class="col-sm-8">@(Model.Phone ?? "Not specified")</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">Location</div>
+            <div class="col-sm-8">
+                @{
+                    var location = "";
+                    if (!string.IsNullOrWhiteSpace(Model.City) && !string.IsNullOrWhiteSpace(Model.Country))
+                    {
+                        location = $"{Model.City}, {Model.Country}";
+                    }
+                    else if (!string.IsNullOrWhiteSpace(Model.City))
+                    {
+                        location = Model.City;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(Model.Country))
+                    {
+                        location = Model.Country;
+                    }
+                    else
+                    {
+                        location = "Not specified";
+                    }
+                }
+                @location
+            </div>
+        </div>
+        
+        <hr />
+        
+        <h5 class="card-title">Education</h5>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">School</div>
+            <div class="col-sm-8">@(Model.School ?? "Not specified")</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">College</div>
+            <div class="col-sm-8">@(Model.College ?? "Not specified")</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">University</div>
+            <div class="col-sm-8">@(Model.University ?? "Not specified")</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">Degree</div>
+            <div class="col-sm-8">@(Model.Degree ?? "Not specified")</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-sm-4 text-muted">Graduation Year</div>
+            <div class="col-sm-8">@(Model.GraduationYear?.ToString() ?? "Not specified")</div>
+        </div>
+    </div>
+</div>

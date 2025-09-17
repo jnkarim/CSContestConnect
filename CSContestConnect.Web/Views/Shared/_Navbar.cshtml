@@ -1,6 +1,5 @@
 @* Views/Shared/_Navbar.cshtml *@
 @{
-    // optional: expose an "active" helper via ViewData["Active"]
     var active = (string?)(ViewData["Active"] ?? "");
 }
 
@@ -25,26 +24,25 @@
                         Home
                     </a>
                 </li>
-
-<li class="nav-item">
-    <a class="nav-link nav-link-neo @(active=="Events"?"active":"")"
-       asp-controller="Events" asp-action="Index">
-        Events
-    </a>
-</li>
-
-
                 <li class="nav-item">
-                    <a class="nav-link nav-link-neo"
-                       href="">
-                       Profile
+                    <a class="nav-link nav-link-neo @(active=="Events"?"active":"")"
+                       asp-controller="Events" asp-action="Index">
+                        Events
                     </a>
                 </li>
-
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-neo @(active=="Profile"?"active":"")"
+                           asp-controller="UserProfile" asp-action="Index">
+                            Profile
+                        </a>
+                    </li>
+                }
                 <li class="nav-item">
                     <a class="nav-link nav-link-neo @(active=="About"?"active":"")"
                        asp-controller="Home" asp-action="About">
-                         About
+                        About
                     </a>
                 </li>
             </ul>

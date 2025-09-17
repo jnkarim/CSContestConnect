@@ -1,0 +1,235 @@
+@model CSContestConnect.Web.Models.ViewModels.EditUserProfileViewModel
+@{
+    ViewData["Title"] = "Edit Profile";
+    ViewData["Active"] = "Profile"; // For navbar active state
+}
+
+<div class="py-5" style="background: linear-gradient(180deg, var(--neo-bg), var(--neo-accent-2));">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border border-neo-purple-soft shadow-sm" style="background: var(--neo-surface); backdrop-filter: blur(10px); box-shadow: 0 8px 24px rgba(139,92,246,0.2);">
+                    <div class="card-header" style="background: linear-gradient(90deg, var(--neo-accent), var(--neo-accent-2));">
+                        <h4 class="text-white mb-0">Edit Profile</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger border-neo-purple bg-neo text-neo-purple" role="alert"></div>
+
+                            <!-- Profile Image -->
+                            <div class="text-center mb-4">
+                                <img id="profileImagePreview"
+                                     src="@(string.IsNullOrWhiteSpace(Model.CurrentImagePath) ? "/img/avatar-placeholder.png" : Model.CurrentImagePath)"
+                                     alt="Profile Image"
+                                     class="img-fluid rounded-circle border border-neo-purple"
+                                     style="width: 150px; height: 150px; object-fit: cover; box-shadow: 0 0 10px var(--neo-purple-soft);" />
+                            </div>
+
+                            <!-- Basic Information -->
+                            <h5 class="mb-3" style="color: var(--neo-purple);">Basic Information</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Email" class="form-label" style="color: var(--neo-purple-soft);">Email (Read-only)</label>
+                                    <input asp-for="Email" class="form-control bg-neo border-neo-purple-soft text-neo-text" readonly />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="FullName" class="form-label" style="color: var(--neo-purple-soft);">Full Name</label>
+                                    <input asp-for="FullName" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="Enter your full name" />
+                                    <span asp-validation-for="FullName" class="text-neo-purple"></span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Bio" class="form-label" style="color: var(--neo-purple-soft);">Bio</label>
+                                <textarea asp-for="Bio" class="form-control bg-neo border-neo-purple-soft text-neo-text" rows="4" placeholder="Tell us about yourself"></textarea>
+                                <span asp-validation-for="Bio" class="text-neo-purple"></span>
+                            </div>
+
+                            <!-- Personal Details -->
+                            <h5 class="mb-3" style="color: var(--neo-purple);">Personal Details</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="DateOfBirth" class="form-label" style="color: var(--neo-purple-soft);">Date of Birth</label>
+                                    <input asp-for="DateOfBirth" type="date" class="form-control bg-neo border-neo-purple-soft text-neo-text" />
+                                    <span asp-validation-for="DateOfBirth" class="text-neo-purple"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Gender" class="form-label" style="color: var(--neo-purple-soft);">Gender</label>
+                                    <select asp-for="Gender" class="form-control bg-neo border-neo-purple-soft text-neo-text">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                        <option value="Prefer not to say">Prefer not to say</option>
+                                    </select>
+                                    <span asp-validation-for="Gender" class="text-neo-purple"></span>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <h5 class="mb-3" style="color: var(--neo-purple);">Contact Information</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Phone" class="form-label" style="color: var(--neo-purple-soft);">Phone</label>
+                                    <input asp-for="Phone" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="+1234567890" />
+                                    <span asp-validation-for="Phone" class="text-neo-purple"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Website" class="form-label" style="color: var(--neo-purple-soft);">Website</label>
+                                    <input asp-for="Website" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="https://example.com" />
+                                    <span asp-validation-for="Website" class="text-neo-purple"></span>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="LinkedIn" class="form-label" style="color: var(--neo-purple-soft);">LinkedIn</label>
+                                    <input asp-for="LinkedIn" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="https://linkedin.com/in/username" />
+                                    <span asp-validation-for="LinkedIn" class="text-neo-purple"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="GitHub" class="form-label" style="color: var(--neo-purple-soft);">GitHub</label>
+                                    <input asp-for="GitHub" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="https://github.com/username" />
+                                    <span asp-validation-for="GitHub" class="text-neo-purple"></span>
+                                </div>
+                            </div>
+
+                            <!-- Location -->
+                            <h5 class="mb-3" style="color: var(--neo-purple);">Location</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Country" class="form-label" style="color: var(--neo-purple-soft);">Country</label>
+                                    <input asp-for="Country" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="Enter your country" />
+                                    <span asp-validation-for="Country" class="text-neo-purple"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="City" class="form-label" style="color: var(--neo-purple-soft);">City</label>
+                                    <input asp-for="City" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="Enter your city" />
+                                    <span asp-validation-for="City" class="text-neo-purple"></span>
+                                </div>
+                            </div>
+
+                            <!-- Education -->
+                            <h5 class="mb-3" style="color: var(--neo-purple);">Education</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="School" class="form-label" style="color: var(--neo-purple-soft);">School</label>
+                                    <input asp-for="School" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="Enter your school" />
+                                    <span asp-validation-for="School" class="text-neo-purple"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="College" class="form-label" style="color: var(--neo-purple-soft);">College</label>
+                                    <input asp-for="College" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="Enter your college" />
+                                    <span asp-validation-for="College" class="text-neo-purple"></span>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="University" class="form-label" style="color: var(--neo-purple-soft);">University</label>
+                                    <input asp-for="University" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="Enter your university" />
+                                    <span asp-validation-for="University" class="text-neo-purple"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Degree" class="form-label" style="color: var(--neo-purple-soft);">Degree</label>
+                                    <input asp-for="Degree" class="form-control bg-neo border-neo-purple-soft text-neo-text" placeholder="Enter your degree" />
+                                    <span asp-validation-for="Degree" class="text-neo-purple"></span>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="GraduationYear" class="form-label" style="color: var(--neo-purple-soft);">Graduation Year</label>
+                                    <input asp-for="GraduationYear" type="number" class="form-control bg-neo border-neo-purple-soft text-neo-text" min="1900" max="2030" placeholder="e.g., 2023" />
+                                    <span asp-validation-for="GraduationYear" class="text-neo-purple"></span>
+                                </div>
+                            </div>
+
+                            <!-- Profile Image Upload -->
+                            <h5 class="mb-3" style="color: var(--neo-purple);">Profile Image</h5>
+                            <div class="mb-3">
+                                <label asp-for="ProfileImageFile" class="form-label" style="color: var(--neo-purple-soft);">Upload New Profile Image</label>
+                                <input asp-for="ProfileImageFile" type="file" class="form-control bg-neo border-neo-purple-soft text-neo-text" accept="image/*" id="profileImageFile" />
+                                <span asp-validation-for="ProfileImageFile" class="text-neo-purple"></span>
+                                <div class="form-text text-muted">Accepted formats: JPG, PNG, WEBP, GIF. Max size: 5MB</div>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.CurrentImagePath))
+                            {
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-outline-neo btn-sm" onclick="deleteProfileImage()">
+                                        Remove Current Image
+                                    </button>
+                                </div>
+                            }
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-neo">Save Changes</button>
+                                <a asp-action="Index" class="btn btn-outline-neo">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Preview image before upload
+        document.getElementById('profileImageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profileImagePreview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Delete profile image function
+        function deleteProfileImage() {
+            if (confirm('Are you sure you want to remove your profile image?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("DeleteProfileImage")';
+                
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token;
+                form.appendChild(tokenInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Add hover and focus effects to form inputs
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.style.transition = 'border-color 0.3s ease, box-shadow 0.3s ease';
+            input.addEventListener('focus', () => {
+                input.style.borderColor = 'var(--neo-purple)';
+                input.style.boxShadow = '0 0 8px rgba(139,92,246,0.5)';
+            });
+            input.addEventListener('blur', () => {
+                input.style.borderColor = 'var(--neo-purple-soft)';
+                input.style.boxShadow = 'none';
+            });
+        });
+
+        // Enhance button hover effects
+        document.querySelectorAll('.btn-outline-neo').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.background = 'rgba(139,92,246,0.2)';
+                btn.style.borderColor = 'var(--neo-purple)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.background = 'transparent';
+                btn.style.borderColor = 'rgba(139,92,246,0.35)';
+            });
+        });
+    </script>
+}
