@@ -396,23 +396,21 @@
 </div><!-- /.home-page -->
 
 @section Scripts{
+    <!-- Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         document.querySelectorAll('.csc-carousel').forEach((el) => {
             const controls = el.closest('.csc-container').querySelector('.csc-swiper-controls');
-new Swiper(el, {
-  slidesPerView: 1.08,
-  spaceBetween: 18,
-  centeredSlides: false,
-  //watchOverflow: true,
-  slidesOffsetBefore: 0,
-  slidesOffsetAfter: 0,
-  breakpoints: {
-    640:  { slidesPerView: 1.4, spaceBetween: 20 },
-    768:  { slidesPerView: 2.0, spaceBetween: 22 },
-    1024: { slidesPerView: 4.0, spaceBetween: 24 },
-    1400: { slidesPerView: 3.0, spaceBetween: 28 }
-  },
+            new Swiper(el, {
+                slidesPerView: 1.08,
+                spaceBetween: 18,
+                centeredSlides: false,
+                breakpoints: {
+                    640:  { slidesPerView: 1.4, spaceBetween: 20 },
+                    768:  { slidesPerView: 2.0, spaceBetween: 22 },
+                    1024: { slidesPerView: 4.0, spaceBetween: 24 },
+                    1400: { slidesPerView: 3.0, spaceBetween: 28 }
+                },
                 navigation: {
                     nextEl: controls?.querySelector('.swiper-button-next'),
                     prevEl: controls?.querySelector('.swiper-button-prev')
@@ -425,7 +423,7 @@ new Swiper(el, {
         });
     </script>
 
-<!-- Floating AI Chatbox -->
+    <!-- Floating AI Chatbox -->
 <div id="aiChatbox">
     <div id="aiChatHeader">
         Chat with AI
@@ -439,76 +437,67 @@ new Swiper(el, {
         </div>
     </div>
 </div>
+    <script>
+        const chatHeader = document.getElementById('aiChatHeader');
+        const chatBody = document.getElementById('aiChatBody');
+        const chatMessages = document.getElementById('aiMessages');
+        const chatInput = document.getElementById('aiInput');
+        const chatSendBtn = document.getElementById('aiSendBtn');
+        const chatCloseBtn = document.getElementById('aiCloseBtn');
 
-@section Scripts {
-<script>
-    const chatHeader = document.getElementById('aiChatHeader');
-    const chatBody = document.getElementById('aiChatBody');
-    const chatMessages = document.getElementById('aiMessages');
-    const chatInput = document.getElementById('aiInput');
-    const chatSendBtn = document.getElementById('aiSendBtn');
-    const chatCloseBtn = document.getElementById('aiCloseBtn');
+        chatHeader.addEventListener('click', (e) => {
+            if(e.target !== chatCloseBtn){
+                chatBody.classList.toggle('open');
+            }
+        });
 
-    // Toggle chat visibility
-    chatHeader.addEventListener('click', (e) => {
-        if(e.target !== chatCloseBtn){
-            chatBody.classList.toggle('open');
+        chatCloseBtn.addEventListener('click', () => {
+            chatBody.classList.remove('open');
+        });
+
+        function appendMessage(message, isUser) {
+            const div = document.createElement('div');
+            div.className = isUser ? 'message user' : 'message ai';
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            if (!isUser) {
+                let i = 0;
+                const interval = setInterval(() => {
+                    div.textContent = message.substring(0, i+1);
+                    i++;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    if(i >= message.length) clearInterval(interval);
+                }, 25);
+            } else {
+                div.textContent = message;
+            }
         }
-    });
 
-    // Close chat
-    chatCloseBtn.addEventListener('click', () => {
-        chatBody.classList.remove('open');
-    });
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            appendMessage(message, true);
+            chatInput.value = '';
 
-    // Append message with typing animation
-    function appendMessage(message, isUser) {
-        const div = document.createElement('div');
-        div.className = isUser ? 'message user' : 'message ai';
-        chatMessages.appendChild(div);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        if (!isUser) {
-            let i = 0;
-            const interval = setInterval(() => {
-                div.textContent = message.substring(0, i+1);
-                i++;
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                if(i >= message.length) clearInterval(interval);
-            }, 25);
-        } else {
-            div.textContent = message;
+            try {
+                const response = await fetch('/api/chat/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+                if (data.reply) appendMessage(data.reply, false);
+                else appendMessage('Sorry, no response from AI.', false);
+            } catch (err) {
+                appendMessage('Error connecting to AI.', false);
+                console.error(err);
+            }
         }
-    }
 
-    async function sendMessage() {
-        const message = chatInput.value.trim();
-        if (!message) return;
-        appendMessage(message, true);
-        chatInput.value = '';
-
-        try {
-            const response = await fetch('/api/chat/ask', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
-            });
-            const data = await response.json();
-            if (data.reply) appendMessage(data.reply, false);
-            else appendMessage('Sorry, no response from AI.', false);
-        } catch (err) {
-            appendMessage('Error connecting to AI.', false);
-            console.error(err);
-        }
-    }
-
-    chatSendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-</script>
-}
-
-
-    
+        chatSendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
 }
