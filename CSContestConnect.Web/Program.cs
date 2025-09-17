@@ -64,6 +64,9 @@ builder.Services
 // --- MVC with Views ---
 builder.Services.AddControllersWithViews();
 
+// --- Gemini AI Service ---
+builder.Services.AddSingleton<GeminiService>();
+
 var app = builder.Build();
 
 // --- Auto-run migrations ---

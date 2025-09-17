@@ -1,104 +1,154 @@
 @{
-    ViewData["Title"] = "Events";
-    Layout = "_Layout";
-    ViewBag.HideNavbar = true; // Show admin navbar
+    ViewData["Title"] = "Events Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<!-- Admin Navbar (Consistent across all pages) -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" asp-controller="Admin" asp-action="Index">Admin Panel</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="h3 mb-0 text-white fw-bold">Events Management</h2>
+        <p class="text-light-50">Manage all contest events, registrations, and schedules.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#createEventModal">
+            <i class="fas fa-plus me-2"></i>Create New Event
         </button>
-        <div class="collapse navbar-collapse" id="adminNavbar">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link active" asp-controller="Admin" asp-action="Events">Events</a></li>
-                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Reviews">Reviews</a></li>
-                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">Users</a></li>
-            </ul>
-            <div class="d-flex">
-                <a asp-controller="Events" asp-action="Create" class="btn btn-primary">Add New Event</a>
+    </div>
+</div>
+
+<!-- Filter and Search -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-dark border-secondary">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <select class="form-select bg-dark text-white border-secondary">
+                            <option selected>All Categories</option>
+                            <option>Programming</option>
+                            <option>Database</option>
+                            <option>Mobile</option>
+                            <option>AI/ML</option>
+                            <option>Web Development</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select class="form-select bg-dark text-white border-secondary">
+                            <option selected>All Status</option>
+                            <option>Active</option>
+                            <option>Registration</option>
+                            <option>Completed</option>
+                            <option>Cancelled</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</nav>
-
-<div class="container-xxl">
-    <div class="card mb-3">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">All Events</h5>
-                <form class="d-flex" method="get" asp-controller="Events" asp-action="Index">
-                    <input name="q" class="form-control form-control-sm me-2" type="search" placeholder="Search by title or location">
-                    <button class="btn btn-sm btn-outline-secondary" type="submit">Search</button>
-                </form>
-            </div>
-        </div>
-        <div class="card-body">
-            @{
-                var events = ViewBag.Events as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
-            }
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Title</th>
-                            <th>Date</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (events.Any())
-                        {
-                            foreach (var e in events)
-                            {
-                                var title = (string)(e?.Title ?? "");
-                                var subtitle = (string)(e?.Subtitle ?? e?.Description ?? "");
-                                var location = (string)(e?.Location ?? "");
-                                var status = (string)(e?.Status ?? "");
-                                var statusClass = (string)(e?.StatusBadgeClass ?? "text-bg-secondary");
-                                string dateText = "";
-                                if (e?.Date is DateTime dt) { dateText = dt.ToString("MMM d, yyyy"); }
-                                else if (e?.Date != null) { dateText = e.Date.ToString(); }
-                        <tr>
-                            <td>
-                                <div class="fw-semibold">@title</div>
-                                @if(!string.IsNullOrWhiteSpace(subtitle)){
-                                    <div class="small text-secondary">@subtitle</div>
-                                }
-                            </td>
-                            <td>@dateText</td>
-                            <td>@location</td>
-                            <td><span class="badge @statusClass">@status</span></td>
-                            <td class="text-end">
-                                <div class="btn-group">
-                                    <a class="btn btn-sm btn-outline-secondary" asp-controller="Events" asp-action="Details" asp-route-id="@(e?.Id)">View</a>
-                                    <a class="btn btn-sm btn-outline-primary" asp-controller="Events" asp-action="Edit" asp-route-id="@(e?.Id)">Edit</a>
-                                    <a class="btn btn-sm btn-outline-danger" asp-controller="Events" asp-action="Delete" asp-route-id="@(e?.Id)">Delete</a>
-                                </div>
-                            </td>
-                        </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center text-secondary py-4">No events found.</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+    <div class="col-md-6">
+        <div class="card bg-dark border-secondary">
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Search events...">
+                    <button class="btn btn-outline-light" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
-    </script>
-}
+<!-- Events Grid -->
+<div class="row">
+    <!-- Event Card Example -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card bg-dark border-secondary event-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center border-secondary">
+                <span class="badge bg-success">Active</span>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-users me-2"></i>Participants</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-white fw-bold">Algorithm Challenge 2024</h5>
+                <p class="card-text text-light-50">A programming contest focusing on data structures and algorithms.</p>
+
+                <div class="mb-3">
+                    <small class="text-light-50">Category:</small>
+                    <span class="badge bg-purple ms-1">Programming</span>
+                </div>
+
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <div class="text-white fw-bold">245</div>
+                        <small class="text-light-50">Participants</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-white fw-bold">12</div>
+                        <small class="text-light-50">Teams</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-white fw-bold">3</div>
+                        <small class="text-light-50">Days Left</small>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-light-50">
+                        <i class="fas fa-calendar me-1"></i>Jan 15, 2024
+                    </small>
+                    <a href="#" class="btn btn-sm btn-gradient">View Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Event Modal -->
+<div class="modal fade" id="createEventModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-white fw-bold">Create New Event</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-light-50">Event Name</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-light-50">Category</label>
+                            <select class="form-select bg-dark text-white border-secondary">
+                                <option>Programming</option>
+                                <option>Database</option>
+                                <option>Mobile</option>
+                                <option>AI/ML</option>
+                                <option>Web Development</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light-50">Description</label>
+                        <textarea class="form-control bg-dark text-white border-secondary" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-gradient">Create Event</button>
+            </div>
+        </div>
+    </div>
+</div>

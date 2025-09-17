@@ -424,4 +424,91 @@ new Swiper(el, {
             });
         });
     </script>
+
+<!-- Floating AI Chatbox -->
+<div id="aiChatbox">
+    <div id="aiChatHeader">
+        Chat with AI
+        <span id="aiCloseBtn">&times;</span>
+    </div>
+    <div id="aiChatBody">
+        <div id="aiMessages"></div>
+        <div id="aiInputArea">
+            <input id="aiInput" type="text" placeholder="Type a message..." />
+            <button id="aiSendBtn">Send</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const chatHeader = document.getElementById('aiChatHeader');
+    const chatBody = document.getElementById('aiChatBody');
+    const chatMessages = document.getElementById('aiMessages');
+    const chatInput = document.getElementById('aiInput');
+    const chatSendBtn = document.getElementById('aiSendBtn');
+    const chatCloseBtn = document.getElementById('aiCloseBtn');
+
+    // Toggle chat visibility
+    chatHeader.addEventListener('click', (e) => {
+        if(e.target !== chatCloseBtn){
+            chatBody.classList.toggle('open');
+        }
+    });
+
+    // Close chat
+    chatCloseBtn.addEventListener('click', () => {
+        chatBody.classList.remove('open');
+    });
+
+    // Append message with typing animation
+    function appendMessage(message, isUser) {
+        const div = document.createElement('div');
+        div.className = isUser ? 'message user' : 'message ai';
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (!isUser) {
+            let i = 0;
+            const interval = setInterval(() => {
+                div.textContent = message.substring(0, i+1);
+                i++;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                if(i >= message.length) clearInterval(interval);
+            }, 25);
+        } else {
+            div.textContent = message;
+        }
+    }
+
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        appendMessage(message, true);
+        chatInput.value = '';
+
+        try {
+            const response = await fetch('/api/chat/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+            const data = await response.json();
+            if (data.reply) appendMessage(data.reply, false);
+            else appendMessage('Sorry, no response from AI.', false);
+        } catch (err) {
+            appendMessage('Error connecting to AI.', false);
+            console.error(err);
+        }
+    }
+
+    chatSendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+}
+
+
+    
 }

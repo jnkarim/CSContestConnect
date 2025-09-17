@@ -16,18 +16,6 @@ namespace CSContestConnect.Web.Controllers
             return View(); // Events view (events.cshtml)
         }
 
-        // Users Page
-        public IActionResult Users()
-        {
-            return View(); // Users view (users.cshtml)
-        }
-
-        // Reviews Page
-        public IActionResult Reviews()
-        {
-            return View(); // Reviews view (reviews.cshtml)
-        }
-
         // Optional: Logout (redirect to login)
         public IActionResult Logout()
         {
