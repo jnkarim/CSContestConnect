@@ -38,6 +38,6 @@ namespace CSContestConnect.Web.Controllers
     // Request model
     public class ChatRequest
     {
-        public string Message { get; set; }
+        public string? Message { get; set; }
     }
 }

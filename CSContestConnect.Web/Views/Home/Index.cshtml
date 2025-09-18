@@ -194,25 +194,26 @@
 
 </div><!-- /.home-page -->
 
-@section Scripts {
+@section Scripts{
+    <!-- Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         // Initialize all carousels and wire their local controls
         document.querySelectorAll('.csc-carousel').forEach((el) => {
-            const container = el.closest('.csc-container');
-            const controls = container ? container.querySelector('.csc-swiper-controls') : null;
-
+            const controls = el.closest('.csc-container').querySelector('.csc-swiper-controls');
             new Swiper(el, {
                 slidesPerView: 1.08,
                 spaceBetween: 18,
                 centeredSlides: false,
-                slidesOffsetBefore: 0,
-                slidesOffsetAfter: 0,
                 breakpoints: {
                     640:  { slidesPerView: 1.4, spaceBetween: 20 },
                     768:  { slidesPerView: 2.0, spaceBetween: 22 },
-                    1024: { slidesPerView: 3.0, spaceBetween: 24 }, // (3 is safer for typical laptop widths)
-                    1400: { slidesPerView: 4.0, spaceBetween: 28 }
+                    1024: { slidesPerView: 4.0, spaceBetween: 24 },
+                    1400: { slidesPerView: 3.0, spaceBetween: 28 }
+                },
+                navigation: {
+                    nextEl: controls?.querySelector('.swiper-button-next'),
+                    prevEl: controls?.querySelector('.swiper-button-prev')
                 },
                 navigation: controls ? {
                     nextEl: controls.querySelector('.swiper-button-next'),
@@ -226,8 +227,21 @@
         });
     </script>
 
+    <!-- Floating AI Chatbox -->
+<div id="aiChatbox">
+    <div id="aiChatHeader">
+        Chat with AI
+        <span id="aiCloseBtn">&times;</span>
+    </div>
+    <div id="aiChatBody">
+        <div id="aiMessages"></div>
+        <div id="aiInputArea">
+            <input id="aiInput" type="text" placeholder="Type a message..." />
+            <button id="aiSendBtn">Send</button>
+        </div>
+    </div>
+</div>
     <script>
-        // Floating AI Chatbox logic
         const chatHeader = document.getElementById('aiChatHeader');
         const chatBody = document.getElementById('aiChatBody');
         const chatMessages = document.getElementById('aiMessages');
@@ -235,9 +249,8 @@
         const chatSendBtn = document.getElementById('aiSendBtn');
         const chatCloseBtn = document.getElementById('aiCloseBtn');
 
-        // Toggle chat visibility
         chatHeader.addEventListener('click', (e) => {
-            if (e.target !== chatCloseBtn) {
+            if(e.target !== chatCloseBtn){
                 chatBody.classList.toggle('open');
             }
         });
@@ -247,7 +260,6 @@
             chatBody.classList.remove('open');
         });
 
-        // Append message with typing animation
         function appendMessage(message, isUser) {
             const div = document.createElement('div');
             div.className = isUser ? 'message user' : 'message ai';
@@ -257,10 +269,10 @@
             if (!isUser) {
                 let i = 0;
                 const interval = setInterval(() => {
-                    div.textContent = message.substring(0, i + 1);
+                    div.textContent = message.substring(0, i+1);
                     i++;
                     chatMessages.scrollTop = chatMessages.scrollHeight;
-                    if (i >= message.length) clearInterval(interval);
+                    if(i >= message.length) clearInterval(interval);
                 }, 25);
             } else {
                 div.textContent = message;
