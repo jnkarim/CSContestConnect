@@ -1,0 +1,109 @@
+@model IEnumerable<CSContestConnect.Web.Models.Event>
+
+@{
+    ViewData["Title"] = "Pending Events";
+    var items = Model?.ToList() ?? new List<CSContestConnect.Web.Models.Event>();
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="text-accent mb-0">@ViewData["Title"]</h2>
+    <span class="badge rounded-pill bg-warning text-dark fs-6">@items.Count</span>
+</div>
+
+@if (TempData["Msg"] is string msg)
+{
+    <div class="alert alert-info shadow-sm">@msg</div>
+}
+
+@if (!items.Any())
+{
+    <div class="card bg-dark border-0 shadow-sm text-center py-5">
+        <div class="card-body">
+            <div class="display-6 mb-2">🎉</div>
+            <h5 class="text-accent">No events pending approval</h5>
+            <p class="text-muted mb-0">You’re all caught up. New submissions will appear here.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-responsive shadow-sm rounded-3 overflow-hidden">
+        <table class="table table-dark table-hover align-middle mb-0">
+            <thead class="table-accent">
+                <tr>
+                    <th>Title</th>
+                    <th>When</th>
+                    <th>Author</th>
+                    <th>Location</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var e in items.OrderBy(x => x.StartsAt))
+            {
+                <tr>
+                    <td>
+                        <div class="fw-semibold">@e.Title</div>
+                        <small class="text-muted">#@e.Id · created @e.CreatedAt.ToLocalTime():g</small>
+                    </td>
+                    <td>
+                        <div>@e.StartsAt.ToLocalTime():g – @e.EndsAt.ToLocalTime():g</div>
+                        <small class="text-muted">UTC: @e.StartsAt:g – @e.EndsAt:g</small>
+                    </td>
+                    <td>
+                        <div>@(e.CreatedBy?.Email ?? e.CreatedById)</div>
+                        @if (!string.IsNullOrWhiteSpace(e.CreatedBy?.DisplayName))
+                        {
+                            <small class="text-muted">@e.CreatedBy.DisplayName</small>
+                        }
+                    </td>
+                    <td>
+                        @if (e.IsOnline)
+                        {
+                            <span class="badge bg-info text-dark">Online</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">
+                                @(string.IsNullOrWhiteSpace(e.Location) ? "TBA" : e.Location)
+                            </span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <form asp-controller="AdminEvents" asp-action="Approve" asp-route-id="@e.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-success btn-sm" type="submit">
+                                <i class="bi bi-check-circle"></i> Approve
+                            </button>
+                        </form>
+                        <form asp-controller="AdminEvents" asp-action="Reject" asp-route-id="@e.Id" method="post" class="d-inline ms-1">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-outline-danger btn-sm" type="submit">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Styles {
+    <style>
+        /* Accent purple header */
+        .table-accent {
+            background-color: #2d033b;
+            color: #fff;
+        }
+
+        .text-accent {
+            color: #a020f0 !important; /* your purple accent */
+        }
+
+        .card.bg-dark {
+            background-color: #1a1a1a !important;
+        }
+    </style>
+}

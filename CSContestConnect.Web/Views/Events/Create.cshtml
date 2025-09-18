@@ -1,0 +1,65 @@
+@model CSContestConnect.Web.Models.Event
+
+@{
+    ViewData["Title"] = "Post an Event";
+}
+
+<h2 class="mb-4">Post an Event</h2>
+
+<form asp-action="Create" method="post" class="mt-3">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="StartsAt" class="form-label"></label>
+        <!-- format without milliseconds -->
+        <input asp-for="StartsAt" type="datetime-local"
+               asp-format="{0:yyyy-MM-ddTHH:mm:ss}" class="form-control" />
+        <span asp-validation-for="StartsAt" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="EndsAt" class="form-label"></label>
+        <input asp-for="EndsAt" type="datetime-local"
+               asp-format="{0:yyyy-MM-ddTHH:mm:ss}" class="form-control" />
+        <span asp-validation-for="EndsAt" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsOnline" class="form-check-input" />
+        <label asp-for="IsOnline" class="form-check-label"></label>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Location" class="form-label"></label>
+        <input asp-for="Location" class="form-control" />
+        <span asp-validation-for="Location" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Price" class="form-label"></label>
+        <input asp-for="Price" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Submit for Approval</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
