@@ -1,0 +1,169 @@
+@model CSContestConnect.Web.Models.Event
+@{
+    ViewData["Title"] = Model?.Title ?? "Event";
+    bool isAuth = User?.Identity?.IsAuthenticated ?? false;
+
+    string dateRange = $"{Model.StartsAt:ddd, MMM d, yyyy h:mm tt} – {Model.EndsAt:ddd, MMM d, yyyy h:mm tt} (UTC)";
+    bool isFree = (Model?.Price ?? 0m) == 0m;
+}
+
+<div class="container-xxl my-4 my-md-5">
+
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item">
+                <a class="link-light text-decoration-none" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a class="link-light text-decoration-none" asp-controller="Events" asp-action="Index">Events</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Main content -->
+        <div class="col-lg-8">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-body p-4">
+
+                    <!-- Title + badges -->
+                    <div class="d-flex align-items-start gap-3 flex-wrap">
+                        <h1 class="h3 mb-0">@Model.Title</h1>
+
+                        <div class="d-flex gap-2">
+                            @if (isFree)
+                            {
+                                <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle">
+                                    <i class="bi bi-ticket-perforated"></i> Free
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill bg-info-subtle text-info-emphasis border border-info-subtle">
+                                    <i class="bi bi-cash-coin"></i> @Model.Price.ToString("0.##")
+                                </span>
+                            }
+
+                            @if (Model.IsOnline)
+                            {
+                                <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle">
+                                    <i class="bi bi-wifi"></i> Online
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+                                    <i class="bi bi-geo-alt"></i> On-site
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <hr class="text-secondary" />
+
+                    <!-- Meta -->
+                    <ul class="list-unstyled vstack gap-2 mb-4">
+                        <li class="d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar-event"></i>
+                            <span class="text-muted">@dateRange</span>
+                        </li>
+                        <li class="d-flex align-items-center gap-2">
+                            <i class="bi bi-map"></i>
+                            <span class="text-muted">
+                                @(Model.IsOnline
+                                    ? "Online"
+                                    : string.IsNullOrWhiteSpace(Model.Location) ? "Location TBA" : Model.Location)
+                            </span>
+                        </li>
+                    </ul>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h2 class="h6 text-uppercase text-muted mb-2">About this event</h2>
+                        <div class="lead fs-6">
+                            @Html.Raw((Model.Description ?? "No description provided.").Replace("\n", "<br />"))
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (isAuth)
+                        {
+                            <a class="btn btn-outline-light" asp-action="My">
+                                <i class="bi bi-arrow-left"></i> Back to My Events
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-outline-light" asp-action="Index">
+                                <i class="bi bi-arrow-left"></i> Back to Events
+                            </a>
+                        }
+
+                        @* Optional: show a register button if you already have an action *@
+                        @* <a class="btn btn-primary" asp-action="Register" asp-route-id="@Model.Id">
+                            <i class="bi bi-person-plus"></i> Register
+                           </a> *@
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="h6 text-uppercase text-muted mb-3">Event summary</h3>
+
+                    <div class="vstack gap-3">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Starts</span>
+                            <span>@Model.StartsAt:MMM d, yyyy h:mm tt</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Ends</span>
+                            <span>@Model.EndsAt:MMM d, yyyy h:mm tt</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Format</span>
+                            <span>@(Model.IsOnline ? "Online" : "On-site")</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Price</span>
+                            <span>@(isFree ? "Free" : Model.Price.ToString("0.##"))</span>
+                        </div>
+                        @if (!Model.IsOnline && !string.IsNullOrWhiteSpace(Model.Location))
+                        {
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-geo-alt mt-1"></i>
+                                <div>@Model.Location</div>
+                            </div>
+                        }
+                    </div>
+
+                    <hr class="text-secondary" />
+
+                    <div class="d-grid">
+                        @if (isAuth)
+                        {
+                            <a class="btn btn-primary" asp-action="Index">
+                                <i class="bi bi-grid-3x3-gap"></i> Browse more events
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-primary" asp-controller="Account" asp-action="Login">
+                                <i class="bi bi-box-arrow-in-right"></i> Login to register
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

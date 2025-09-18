@@ -1,0 +1,42 @@
+@model IEnumerable<CSContestConnect.Web.Models.Event>
+@using CSContestConnect.Web.Models
+@{
+    ViewData["Title"] = "My Events";
+}
+<h2>My Events</h2>
+
+@if (TempData["Msg"] is string msg)
+{
+    <div class="alert alert-success">@msg</div>
+}
+
+@if (!Model.Any())
+{
+    <p>You haven’t posted any events yet.</p>
+    <a class="btn btn-primary" asp-action="Create">Post Event</a>
+}
+else
+{
+    <a class="btn btn-primary mb-3" asp-action="Create">Post Event</a>
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Schedule</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var e in Model)
+        {
+            <tr>
+                <td><a asp-action="Details" asp-route-id="@e.Id">@e.Title</a></td>
+                <td>@e.StartsAt:g – @e.EndsAt:g (UTC)</td>
+                <td>
+                    @e.ApprovalStatus
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

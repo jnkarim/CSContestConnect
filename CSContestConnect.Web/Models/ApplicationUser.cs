@@ -16,5 +16,6 @@ namespace CSContestConnect.Web.Models
         // Add any other custom properties you need
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
+        public string? DisplayName { get; set; }
     }
 }

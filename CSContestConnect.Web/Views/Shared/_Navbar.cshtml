@@ -24,14 +24,24 @@
                         Home
                     </a>
                 </li>
+
                 <li class="nav-item">
                     <a class="nav-link nav-link-neo @(active=="Events"?"active":"")"
                        asp-controller="Events" asp-action="Index">
                         Events
                     </a>
                 </li>
+
+                @* Authenticated-only links *@
                 @if (User.Identity?.IsAuthenticated ?? false)
                 {
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-neo @(active=="MyEvents"?"active":"")"
+                           asp-controller="Events" asp-action="My">
+                            My-Events
+                        </a>
+                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link nav-link-neo @(active=="Profile"?"active":"")"
                            asp-controller="UserProfile" asp-action="Index">
@@ -39,12 +49,17 @@
                         </a>
                     </li>
                 }
-                <li class="nav-item">
-                    <a class="nav-link nav-link-neo @(active=="About"?"active":"")"
-                       asp-controller="Home" asp-action="About">
-                        About
-                    </a>
-                </li>
+
+                @* Admin-only link *@
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-neo @(active=="Approvals"?"active":"")"
+                           asp-controller="AdminEvents" asp-action="Pending">
+                            Approvals
+                        </a>
+                    </li>
+                }
             </ul>
 
             <!-- Right: Auth / CTA -->
@@ -56,16 +71,19 @@
                             <i class="bi bi-plus-lg"></i> Post an Event
                         </a>
                     </li>
+
                     <li class="nav-item d-none d-lg-block">
-                        <span class="nav-link text-muted">Hi, @User.Identity!.Name!</span>
+                        <span class="nav-link text-muted">
+                            Hi, @(User.Identity?.Name ?? "User")!
+                        </span>
                     </li>
+
                     <li class="nav-item">
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-neo btn-sm">
-                                <i class="bi bi-box-arrow-right"></i> Logout
-                            </button>
-                        </form>
+                        <!-- Use a link to trigger a hidden global logout form (added in _Layout) -->
+                        <a href="#" class="btn btn-outline-neo btn-sm"
+                           onclick="document.getElementById('logoutForm').submit(); return false;">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
                     </li>
                 }
                 else

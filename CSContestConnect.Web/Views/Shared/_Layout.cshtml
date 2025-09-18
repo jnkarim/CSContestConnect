@@ -3,92 +3,47 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CSContestConnect.Web</title>
+    <title>@ViewData["Title"] - CSContestConnect</title>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/admin.css" />
+
+    <!-- Site CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @* <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" /> *@
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
-    <!-- Site styles -->
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/CSContestConnect.Web.styles.css" asp-append-version="true" />
-
-    @* Page-specific styles (like auth.css) *@
     @await RenderSectionAsync("Styles", required: false)
-    
-    </head>
-    <body class="neo-body">
-        @if (ViewBag.HideNavbar != true)
-        {
-            @if (ViewBag.HideNavbar != true)
-            {
-                <header>
-                    @await Html.PartialAsync("_Navbar")
-                </header>
-            }
-        }
+</head>
+<body class="neo-body">
+    @if (ViewBag.HideNavbar != true)
+    {
+        <header>
+            @await Html.PartialAsync("_Navbar")
+        </header>
+    }
 
     @{
         var isHome = ViewContext.RouteData.Values["controller"]?.ToString() == "Home"
-                    && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
+                     && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
     }
     <main role="main" class="@(isHome ? "container-fluid p-0" : "container-xxl px-4 px-md-5")">
         @RenderBody()
     </main>
 
-
-  <footer class="footer-neo mt-auto py-4">
-    <div class="container-xxl px-4 px-md-5">
-        <div class="row gy-4 align-items-center">
-
-            <!-- Brand & tagline -->
-            <div class="col-md-4 text-center text-md-start">
-                <div class="d-flex align-items-center gap-2 mb-2 justify-content-center justify-content-md-start">
-                     <span class="fw-bold brand-name">
-                <span class="brand-white">CSContest</span><span class="brand-purple">Connect</span>
-                </span>
-                </div>
-                <p class="small text-muted mb-0">
-                    Your hub for hackathons & programming contests worldwide.
-                </p>
-            </div>
-
-            <!-- Navigation links -->
-            <div class="col-md-4 text-center">
-                <ul class="list-inline mb-0 footer-links">
-                    <li class="list-inline-item"><a class="link-neo" asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li class="list-inline-item"><a class="link-neo" asp-controller="Home" asp-action="Privacy">Privacy</a></li>
-                    <li class="list-inline-item"><a class="link-neo" asp-controller="Events" asp-action="Index">Events</a></li>
-                    <li class="list-inline-item"><a class="link-neo" asp-controller="Account" asp-action="Register">Sign Up</a></li>
-                </ul>
-            </div>
-
-            <!-- Socials -->
-            <div class="col-md-4 text-center text-md-end">
-                <div class="d-flex justify-content-center justify-content-md-end gap-3">
-                    <a href="#" class="social-link"><i class="bi bi-github"></i></a>
-                    <a href="#" class="social-link"><i class="bi bi-twitter-x"></i></a>
-                    <a href="#" class="social-link"><i class="bi bi-linkedin"></i></a>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Copyright -->
-        <div class="d-flex justify-content-between small text-muted flex-column flex-md-row text-center text-md-start">
-            <span>&copy; 2025 CSContestConnect — All rights reserved.</span>
-        </div>
-    </div>
-</footer>
-
-
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Hidden global logout form (used by navbar link) -->
+    <form id="logoutForm" asp-controller="Account" asp-action="Logout" method="post" class="d-none">
+        @Html.AntiForgeryToken()
+    </form>
 </body>
 </html>
