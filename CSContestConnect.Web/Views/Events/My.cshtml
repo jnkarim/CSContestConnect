@@ -3,40 +3,87 @@
 @{
     ViewData["Title"] = "My Events";
 }
-<h2>My Events</h2>
 
-@if (TempData["Msg"] is string msg)
+<h1 class="mb-3">My Events</h1>
+
+<p class="mb-3">
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Post New Event</a>
+</p>
+
+@if (TempData["Msg"] is string message)
 {
-    <div class="alert alert-success">@msg</div>
+    <div class="alert alert-@(TempData["MsgType"] ?? "info")">@message</div>
 }
 
 @if (!Model.Any())
 {
-    <p>You haven’t posted any events yet.</p>
-    <a class="btn btn-primary" asp-action="Create">Post Event</a>
+    <div class="alert alert-info">You haven't posted any events yet.</div>
 }
 else
 {
-    <a class="btn btn-primary mb-3" asp-action="Create">Post Event</a>
-    <table class="table table-hover align-middle">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Schedule</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var e in Model)
-        {
-            <tr>
-                <td><a asp-action="Details" asp-route-id="@e.Id">@e.Title</a></td>
-                <td>@e.StartsAt:g – @e.EndsAt:g (UTC)</td>
-                <td>
-                    @e.ApprovalStatus
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>When</th>
+                    <th>Status</th>
+                    <th class="text-end">Tickets</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                @if (!string.IsNullOrEmpty(e.ImagePath))
+                                {
+                                    <img src="@e.ImagePath" alt="cover" class="rounded" style="width:52px;height:36px;object-fit:cover;">
+                                }
+                                <div>
+                                    <div class="fw-semibold">@e.Title</div>
+                                    <div class="text-muted small">@e.Location @(e.IsOnline ? "(Online)" : "")</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>@e.StartsAt.ToLocalTime():g</div>
+                            <div class="text-muted small">ends @e.EndsAt.ToLocalTime():g</div>
+                        </td>
+                        <td>
+                            @{
+                                var badge = e.ApprovalStatus switch
+                                {
+                                    EventApprovalStatus.Pending => "warning",
+                                    EventApprovalStatus.Approved => "success",
+                                    EventApprovalStatus.Rejected => "danger",
+                                    _ => "secondary"
+                                };
+                            }
+                            <span class="badge bg-@badge">@e.ApprovalStatus</span>
+                        </td>
+                        <td class="text-end">
+                            @if (e.TicketCapacity.HasValue)
+                            {
+                                <span>@e.RegisteredCount / @e.TicketCapacity</span>
+                                if (e.RegisteredCount >= e.TicketCapacity.Value)
+                                {
+                                    <span class="badge bg-secondary ms-1">Full</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>∞</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@e.Id" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }

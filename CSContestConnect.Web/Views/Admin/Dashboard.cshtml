@@ -1,52 +1,165 @@
 @using CSContestConnect.Web.ViewModels
+@using CSContestConnect.Web.Models
 @model AdminDashboardVm
 
 @{
     ViewData["Title"] = "Dashboard";
+
+    var total = Model.Total;
+    double pct(int n) => total > 0 ? Math.Round(n * 100.0 / total, 1) : 0;
+
+    var pctPending  = pct(Model.Pending);
+    var pctApproved = pct(Model.Approved);
+    var pctRejected = pct(Model.Rejected);
 }
 
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <h2 class="text-accent mb-0">@ViewData["Title"]</h2>
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <div>
+        <h1 class="page-title mb-1">@ViewData["Title"]</h1>
+        <div class="text-muted small">Overview of hackathons & programming contests</div>
+    </div>
+
 </div>
 
 <!-- KPI cards -->
 <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3"><div class="card bg-dark border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Total</div><div class="fs-3 fw-semibold">@Model.Total</div></div></div></div>
-    <div class="col-6 col-md-3"><div class="card bg-dark border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Pending</div><div class="fs-3 fw-semibold text-warning">@Model.Pending</div></div></div></div>
-    <div class="col-6 col-md-3"><div class="card bg-dark border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Approved</div><div class="fs-3 fw-semibold text-success">@Model.Approved</div></div></div></div>
-    <div class="col-6 col-md-3"><div class="card bg-dark border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Rejected</div><div class="fs-3 fw-semibold text-danger">@Model.Rejected</div></div></div></div>
+    <div class="col-6 col-xl-3">
+        <div class="card kpi h-100">
+            <div class="card-body">
+                <div class="kpi-icon bg-grad-total"><i class="bi bi-grid-1x2"></i></div>
+                <div class="kpi-meta text-muted">Total</div>
+                <div class="kpi-value">@Model.Total</div>
+                <div class="kpi-sub text-muted">All time</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card kpi h-100">
+            <div class="card-body">
+                <div class="kpi-icon bg-grad-pending"><i class="bi bi-hourglass-split"></i></div>
+                <div class="kpi-meta text-muted">Pending</div>
+                <div class="kpi-value text-warning">@Model.Pending</div>
+                <div class="kpi-sub text-muted">@pctPending%</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card kpi h-100">
+            <div class="card-body">
+                <div class="kpi-icon bg-grad-approved"><i class="bi bi-check2-circle"></i></div>
+                <div class="kpi-meta text-muted">Approved</div>
+                <div class="kpi-value text-success">@Model.Approved</div>
+                <div class="kpi-sub text-muted">@pctApproved%</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card kpi h-100">
+            <div class="card-body">
+                <div class="kpi-icon bg-grad-rejected"><i class="bi bi-x-circle"></i></div>
+                <div class="kpi-meta text-muted">Rejected</div>
+                <div class="kpi-value text-danger">@Model.Rejected</div>
+                <div class="kpi-sub text-muted">@pctRejected%</div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Weekly activity -->
+<!-- Weekly activity + status distribution -->
 <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3"><div class="card bg-dark border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">New this week</div><div class="fs-4 fw-semibold">@Model.NewThisWeek</div></div></div></div>
-    <div class="col-6 col-md-3"><div class="card bg-dark border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Approved this week</div><div class="fs-4 fw-semibold text-success">@Model.ApprovedThisWeek</div></div></div></div>
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="pill-icon"><i class="bi bi-calendar-week"></i></div>
+                    <div>
+                        <div class="text-muted small">New this week</div>
+                        <div class="fs-3 fw-semibold">@Model.NewThisWeek</div>
+                    </div>
+                </div>
+                <div class="vr d-none d-md-block"></div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="pill-icon success"><i class="bi bi-patch-check"></i></div>
+                    <div>
+                        <div class="text-muted small">Approved this week</div>
+                        <div class="fs-3 fw-semibold text-success">@Model.ApprovedThisWeek</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compact distribution bar -->
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header card-header-ghost">
+                Status distribution
+            </div>
+            <div class="card-body">
+                <div class="distribution-bar rounded-3 overflow-hidden mb-2">
+                    <div class="seg approved" style="width:@pctApproved%"></div>
+                    <div class="seg pending"  style="width:@pctPending%"></div>
+                    <div class="seg rejected" style="width:@pctRejected%"></div>
+                </div>
+                <div class="d-flex flex-wrap gap-3 small">
+                    <span class="legend"><span class="dot approved"></span>Approved (@pctApproved%)</span>
+                    <span class="legend"><span class="dot pending"></span>Pending (@pctPending%)</span>
+                    <span class="legend"><span class="dot rejected"></span>Rejected (@pctRejected%)</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- Tables -->
 <div class="row g-4">
-    <div class="col-12 col-lg-6">
-        <div class="card bg-dark border-0 shadow-sm">
-            <div class="card-header table-accent fw-semibold">Latest submissions</div>
+    <div class="col-12 col-xxl-6">
+        <div class="card">
+            <div class="card-header card-header-ghost d-flex align-items-center justify-content-between">
+                <span>Latest submissions</span>
+                <a asp-controller="Admin" asp-action="Pending" class="btn btn-sm btn-outline-light">
+                    Review <i class="bi bi-arrow-right-short"></i>
+                </a>
+            </div>
             <div class="card-body p-0">
-                @if (!Model.Latest.Any()) { <div class="p-4 text-muted">No events yet.</div> }
-                else {
+                @if (!Model.Latest.Any())
+                {
+                    <div class="empty-state">
+                        <div class="emoji">🗂️</div>
+                        <div class="text-muted">No events yet.</div>
+                    </div>
+                }
+                else
+                {
                     <div class="table-responsive">
-                        <table class="table table-dark table-hover align-middle mb-0">
-                            <thead><tr><th>Title</th><th>Status</th><th>Author</th><th>Created</th></tr></thead>
+                        <table class="table table-dark table-hover align-middle mb-0 modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:220px">Title</th>
+                                    <th>Status</th>
+                                    <th>Author</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
                             <tbody>
                             @foreach (var e in Model.Latest)
                             {
                                 var badge = e.ApprovalStatus switch
                                 {
-                                    EventApprovalStatus.Pending => "badge bg-warning text-dark",
-                                    EventApprovalStatus.Approved => "badge bg-success",
-                                    _ => "badge bg-danger"
+                                    EventApprovalStatus.Pending  => "badge rounded-pill bg-warning-subtle text-warning-emphasis",
+                                    EventApprovalStatus.Approved => "badge rounded-pill bg-success-subtle text-success-emphasis",
+                                    _                             => "badge rounded-pill bg-danger-subtle text-danger-emphasis"
                                 };
                                 <tr>
-                                    <td class="fw-semibold">@e.Title</td>
+                                    <td class="text-truncate" title="@e.Title">
+                                        <i class="bi bi-lightning-charge me-1 text-accent"></i>
+                                        <span class="fw-semibold">@e.Title</span>
+                                    </td>
                                     <td><span class="@badge">@e.ApprovalStatus</span></td>
-                                    <td>@(e.CreatedBy?.Email ?? e.CreatedById)</td>
-                                    <td>@e.CreatedAt.ToLocalTime():g</td>
+                                    <td class="text-truncate" title="@(e.CreatedBy?.Email ?? e.CreatedById)">
+                                        @(e.CreatedBy?.Email ?? e.CreatedById)
+                                    </td>
+                                    <td class="text-nowrap">@e.CreatedAt.ToLocalTime():g</td>
                                 </tr>
                             }
                             </tbody>
@@ -56,22 +169,43 @@
             </div>
         </div>
     </div>
-    <div class="col-12 col-lg-6">
-        <div class="card bg-dark border-0 shadow-sm">
-            <div class="card-header table-accent fw-semibold">Upcoming (approved)</div>
+
+    <div class="col-12 col-xxl-6">
+        <div class="card">
+            <div class="card-header card-header-ghost">Upcoming (approved)</div>
             <div class="card-body p-0">
-                @if (!Model.UpcomingApproved.Any()) { <div class="p-4 text-muted">No upcoming approved events.</div> }
-                else {
+                @if (!Model.UpcomingApproved.Any())
+                {
+                    <div class="empty-state">
+                        <div class="emoji">📭</div>
+                        <div class="text-muted">No upcoming approved events.</div>
+                    </div>
+                }
+                else
+                {
                     <div class="table-responsive">
-                        <table class="table table-dark table-hover align-middle mb-0">
-                            <thead><tr><th>Title</th><th>When (local)</th><th>Author</th></tr></thead>
+                        <table class="table table-dark table-hover align-middle mb-0 modern-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:220px">Title</th>
+                                    <th>When (local)</th>
+                                    <th>Author</th>
+                                </tr>
+                            </thead>
                             <tbody>
                             @foreach (var e in Model.UpcomingApproved)
                             {
                                 <tr>
-                                    <td class="fw-semibold">@e.Title</td>
-                                    <td>@e.StartsAt.ToLocalTime():g – @e.EndsAt.ToLocalTime():g</td>
-                                    <td>@(e.CreatedBy?.Email ?? e.CreatedById)</td>
+                                    <td class="text-truncate" title="@e.Title">
+                                        <i class="bi bi-calendar-event me-1 text-success"></i>
+                                        <span class="fw-semibold">@e.Title</span>
+                                    </td>
+                                    <td class="text-nowrap">
+                                        @e.StartsAt.ToLocalTime():g – @e.EndsAt.ToLocalTime():g
+                                    </td>
+                                    <td class="text-truncate" title="@(e.CreatedBy?.Email ?? e.CreatedById)">
+                                        @(e.CreatedBy?.Email ?? e.CreatedById)
+                                    </td>
                                 </tr>
                             }
                             </tbody>
@@ -84,9 +218,100 @@
 </div>
 
 @section Styles {
-    <style>
-        .table-accent { background-color: #2d033b; color: #fff; }
-        .text-accent { color: #a020f0 !important; }
-        .card.bg-dark { background-color: #1a1a1a !important; }
-    </style>
+<style>
+    :root {
+        --csc-bg: #0f0f12;
+        --csc-card: #17171b;
+        --csc-ghost: #1e1e24;
+        --csc-border: #2a2a33;
+        --csc-accent: #a020f0;
+        --csc-accent-2: #7b1fa2;
+        --csc-success: #22c55e;
+        --csc-warning: #f59e0b;
+        --csc-danger:  #ef4444;
+    }
+
+    .page-title { font-size: clamp(1.4rem, 1.1rem + 1.5vw, 2rem); font-weight: 700; }
+    .text-accent { color: var(--csc-accent) !important; }
+
+    /* Cards */
+    .card {
+        background: linear-gradient(180deg, var(--csc-card), #121217);
+        border: 1px solid var(--csc-border);
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(0,0,0,.25);
+        color: #e8e8ef;
+    }
+    .card-header.card-header-ghost {
+        background: var(--csc-ghost);
+        border-bottom: 1px solid var(--csc-border);
+        color: #eaeafb;
+        font-weight: 600;
+        padding: .875rem 1rem;
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+    }
+
+    /* KPI */
+    .kpi .card-body { position: relative; padding: 1rem 1rem 1rem 4.25rem; }
+    .kpi-icon {
+        position: absolute; inset: 1rem auto auto 1rem;
+        width: 2.5rem; height: 2.5rem; border-radius: 12px;
+        display: grid; place-items: center; color: #fff; font-size: 1.25rem;
+        box-shadow: 0 6px 16px rgba(0,0,0,.35);
+    }
+    .bg-grad-total    { background-image: linear-gradient(135deg, #6366f1, #4338ca); }
+    .bg-grad-pending  { background-image: linear-gradient(135deg, #f59e0b, #b45309); }
+    .bg-grad-approved { background-image: linear-gradient(135deg, #22c55e, #15803d); }
+    .bg-grad-rejected { background-image: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .kpi-meta { font-size: .8rem; letter-spacing:.02em; }
+    .kpi-value { font-size: 1.75rem; font-weight: 700; line-height: 1.1; }
+    .kpi-sub { font-size: .8rem; }
+
+    /* Buttons */
+    .btn-accent {
+        background: linear-gradient(135deg, var(--csc-accent), var(--csc-accent-2));
+        color: #fff; border: 0; border-radius: 12px; padding: .55rem .9rem;
+    }
+    .btn-accent:hover { filter: brightness(1.05); }
+
+    /* Distribution bar */
+    .distribution-bar { height: 14px; background: #0e0e12; border: 1px solid var(--csc-border); }
+    .distribution-bar .seg { height: 100%; float: left; }
+    .distribution-bar .approved { background: rgba(34,197,94,.85); }
+    .distribution-bar .pending  { background: rgba(245,158,11,.85); }
+    .distribution-bar .rejected { background: rgba(239,68,68,.85); }
+
+    .legend { display: inline-flex; align-items: center; gap: .4rem; }
+    .legend .dot { width: .7rem; height: .7rem; border-radius: 50%; display: inline-block; }
+    .legend .dot.approved { background: var(--csc-success); }
+    .legend .dot.pending  { background: var(--csc-warning); }
+    .legend .dot.rejected { background: var(--csc-danger); }
+
+    /* Pills */
+    .pill-icon {
+        width: 42px; height: 42px; border-radius: 999px;
+        background: rgba(160,32,240,.12); color: var(--csc-accent);
+        display: grid; place-items: center; font-size: 1.1rem;
+        border: 1px solid var(--csc-border);
+    }
+    .pill-icon.success { background: rgba(34,197,94,.12); color: var(--csc-success); }
+
+    /* Tables */
+    .modern-table thead th {
+        font-weight: 600; color: #bfc1d6; border-bottom: 1px solid var(--csc-border);
+        background: var(--csc-ghost);
+    }
+    .modern-table tbody tr:hover { background: rgba(160,32,240,.06); }
+    .modern-table td, .modern-table th { padding: .85rem 1rem; vertical-align: middle; }
+    .text-truncate { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Empty state */
+    .empty-state { padding: 2.25rem 1rem; text-align: center; }
+    .empty-state .emoji { font-size: 1.75rem; margin-bottom: .25rem; }
+
+    /* Subtle focus/hover */
+    .btn, .card, .table { transition: transform .08s ease, box-shadow .08s ease, filter .12s ease; }
+    .card:hover { transform: translateY(-1px); }
+</style>
 }

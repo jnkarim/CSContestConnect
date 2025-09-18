@@ -1,5 +1,6 @@
 using CSContestConnect.Web.Data;
 using CSContestConnect.Web.Models;
+using CSContestConnect.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,11 +12,19 @@ namespace CSContestConnect.Web.Controllers
     {
         private readonly AppDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IImageStore _imageStore;          // use interface
+        private readonly IWebHostEnvironment _env;
 
-        public EventsController(AppDbContext db, UserManager<ApplicationUser> userManager)
+        public EventsController(
+            AppDbContext db,
+            UserManager<ApplicationUser> userManager,
+            IImageStore imageStore,
+            IWebHostEnvironment env)
         {
             _db = db;
             _userManager = userManager;
+            _imageStore = imageStore;
+            _env = env;
         }
 
         // Public: only Approved shown
@@ -61,12 +70,30 @@ namespace CSContestConnect.Web.Controllers
         });
 
         [Authorize, HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Event model)
+        public async Task<IActionResult> Create(Event model, IFormFile? CoverImage)
         {
             if (model.EndsAt <= model.StartsAt)
                 ModelState.AddModelError(nameof(Event.EndsAt), "End time must be after start time.");
+            if (model.TicketCapacity is < 0)
+                ModelState.AddModelError(nameof(Event.TicketCapacity), "Capacity cannot be negative.");
 
             if (!ModelState.IsValid) return View(model);
+
+            // Save cover image (uses IImageStore -> LocalImageStore)
+            if (CoverImage != null && CoverImage.Length > 0)
+            {
+                // LocalImageStore implements a SaveEventImageAsync in your project
+                // If your IImageStore doesn't declare it yet, add it there; otherwise call the concrete via 'as' cast.
+                if (_imageStore is LocalImageStore concreteStore)
+                {
+                    model.ImagePath = await concreteStore.SaveEventImageAsync(CoverImage, _env.WebRootPath, model.ImagePath);
+                }
+                else
+                {
+                    // Fallback: save under profiles path if interface lacks event method
+                    model.ImagePath = await _imageStore.SaveProfileImageAsync(CoverImage!, _env.WebRootPath, model.ImagePath);
+                }
+            }
 
             var uid = _userManager.GetUserId(User)!;
             model.CreatedById = uid;
@@ -90,6 +117,36 @@ namespace CSContestConnect.Web.Controllers
                 .OrderByDescending(e => e.CreatedAt)
                 .ToListAsync();
             return View(items);
+        }
+
+        // Register — enforces capacity
+        [Authorize, HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(int id)
+        {
+            var ev = await _db.Events.FirstOrDefaultAsync(x => x.Id == id);
+            if (ev == null) return NotFound();
+
+            if (ev.ApprovalStatus != EventApprovalStatus.Approved)
+            {
+                TempData["Msg"] = "This event is not open for registration.";
+                TempData["MsgType"] = "warning";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Requires Event model to have TicketCapacity, RegisteredCount, and IsFull
+            if (ev.TicketCapacity.HasValue && ev.RegisteredCount >= ev.TicketCapacity.Value)
+            {
+                TempData["Msg"] = "Tickets are sold out.";
+                TempData["MsgType"] = "danger";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            ev.RegisteredCount += 1;
+            await _db.SaveChangesAsync();
+
+            TempData["Msg"] = "You are registered!";
+            TempData["MsgType"] = "success";
+            return RedirectToAction(nameof(Details), new { id });
         }
     }
 }
