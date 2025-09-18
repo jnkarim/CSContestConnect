@@ -3,21 +3,43 @@
 @{
     ViewData["Title"] = "Pending Events";
     var items = Model?.ToList() ?? new List<CSContestConnect.Web.Models.Event>();
+
+    string Trim(string? s, int n = 140)
+        => string.IsNullOrWhiteSpace(s) ? "No description provided."
+           : (s!.Length <= n ? s : s.Substring(0, n) + "…");
 }
 
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <h2 class="text-accent mb-0">@ViewData["Title"]</h2>
-    <span class="badge rounded-pill bg-warning text-dark fs-6">@items.Count</span>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <h2 class="text-accent mb-0">@ViewData["Title"]</h2>
+        <span class="badge rounded-pill bg-gradient-accent text-white fs-6">@items.Count</span>
+    </div>
+
+    <div class="toolbar d-flex flex-wrap gap-2">
+        <div class="input-icon">
+            <i class="bi bi-search"></i>
+            <input id="evtSearch" type="search" class="form-control form-control-sm"
+                   placeholder="Search title, author, location…" />
+        </div>
+        <select id="evtSort" class="form-select form-select-sm">
+            <option value="start-asc" selected>Starts soonest</option>
+            <option value="start-desc">Starts latest</option>
+            <option value="created-desc">Newest submissions</option>
+            <option value="created-asc">Oldest submissions</option>
+            <option value="title-asc">Title A–Z</option>
+            <option value="title-desc">Title Z–A</option>
+        </select>
+    </div>
 </div>
 
 @if (TempData["Msg"] is string msg)
 {
-    <div class="alert alert-info shadow-sm">@msg</div>
+    <div class="alert alert-info shadow-sm glass">@msg</div>
 }
 
 @if (!items.Any())
 {
-    <div class="card bg-dark border-0 shadow-sm text-center py-5">
+    <div class="card glass border-0 text-center py-5">
         <div class="card-body">
             <div class="display-6 mb-2">🎉</div>
             <h5 class="text-accent">No events pending approval</h5>
@@ -27,83 +49,296 @@
 }
 else
 {
-    <div class="table-responsive shadow-sm rounded-3 overflow-hidden">
-        <table class="table table-dark table-hover align-middle mb-0">
-            <thead class="table-accent">
-                <tr>
-                    <th>Title</th>
-                    <th>When</th>
-                    <th>Author</th>
-                    <th>Location</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var e in items.OrderBy(x => x.StartsAt))
-            {
-                <tr>
-                    <td>
-                        <div class="fw-semibold">@e.Title</div>
-                        <small class="text-muted">#@e.Id · created @e.CreatedAt.ToLocalTime():g</small>
-                    </td>
-                    <td>
-                        <div>@e.StartsAt.ToLocalTime():g – @e.EndsAt.ToLocalTime():g</div>
-                        <small class="text-muted">UTC: @e.StartsAt:g – @e.EndsAt:g</small>
-                    </td>
-                    <td>
-                        <div>@(e.CreatedBy?.Email ?? e.CreatedById)</div>
-                        @if (!string.IsNullOrWhiteSpace(e.CreatedBy?.DisplayName))
-                        {
-                            <small class="text-muted">@e.CreatedBy.DisplayName</small>
-                        }
-                    </td>
-                    <td>
-                        @if (e.IsOnline)
-                        {
-                            <span class="badge bg-info text-dark">Online</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">
-                                @(string.IsNullOrWhiteSpace(e.Location) ? "TBA" : e.Location)
+    <!-- Grid -->
+    <div id="evtGrid" class="row g-3 g-md-4">
+        @foreach (var e in items)
+        {
+            var hasCap = e.TicketCapacity.HasValue;
+            var cap    = hasCap ? Math.Max(1, e.TicketCapacity!.Value) : 0;
+            var used   = hasCap ? Math.Min(e.RegisteredCount, cap) : 0;
+            var pct    = hasCap ? Math.Clamp((int)Math.Round(100.0 * used / cap), 0, 100) : 0;
+            var modalId = $"evtModal-{e.Id}";
+
+            <div class="col-12 col-sm-6 col-lg-4" 
+                 data-title="@e.Title"
+                 data-author="@(e.CreatedBy?.DisplayName ?? e.CreatedBy?.Email ?? e.CreatedById)"
+                 data-location="@(e.IsOnline ? "Online" : (string.IsNullOrWhiteSpace(e.Location) ? "TBA" : e.Location))"
+                 data-start="@e.StartsAt.ToUniversalTime().Ticks"
+                 data-created="@e.CreatedAt.ToUniversalTime().Ticks">
+                <div class="card event-card glass h-100 border-0 overflow-hidden">
+                    @if (!string.IsNullOrWhiteSpace(e.ImagePath))
+                    {
+                        <div class="ratio ratio-16x9">
+                            <img src="@e.ImagePath" alt="cover"
+                                 class="card-img-top object-cover" />
+                        </div>
+                    }
+
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                            <h5 class="card-title mb-0">@e.Title</h5>
+                            <span class="chip @((e.IsOnline) ? "chip-info" : "chip-secondary")">
+                                @(e.IsOnline ? "Online" : (string.IsNullOrWhiteSpace(e.Location) ? "TBA" : e.Location))
                             </span>
-                        }
-                    </td>
-                    <td class="text-end">
-                        <form asp-controller="AdminEvents" asp-action="Approve" asp-route-id="@e.Id" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <button class="btn btn-success btn-sm" type="submit">
-                                <i class="bi bi-check-circle"></i> Approve
+                        </div>
+
+                        <div class="text-muted small mb-2">
+                            <i class="bi bi-clock"></i>
+                            @e.StartsAt.ToLocalTime():ddd, MMM d • h:mm tt – @e.EndsAt.ToLocalTime():h:mm tt
+                        </div>
+
+                        <p class="text-muted small mb-3">@Trim(e.Description, 120)</p>
+
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2 small text-muted">
+                                <i class="bi bi-person-badge"></i>
+                                <span>@(e.CreatedBy?.Email ?? e.CreatedById)</span>
+                            </div>
+
+                            <div class="capacity small">
+                                @if (hasCap)
+                                {
+                                    <span class="text-muted">@used / @cap</span>
+                                    <div class="progress bg-dim mt-1" style="height:6px; width:160px;">
+                                        <div class="progress-bar bg-accent" role="progressbar" style="width:@pct%"></div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill bg-outline">Unlimited</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mt-auto d-flex gap-2">
+                            <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#@modalId" aria-label="View details">
+                                <i class="bi bi-eye"></i> View
                             </button>
-                        </form>
-                        <form asp-controller="AdminEvents" asp-action="Reject" asp-route-id="@e.Id" method="post" class="d-inline ms-1">
-                            @Html.AntiForgeryToken()
-                            <button class="btn btn-outline-danger btn-sm" type="submit">
-                                <i class="bi bi-x-circle"></i> Reject
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+                            <form asp-controller="AdminEvents" asp-action="Approve" asp-route-id="@e.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-success btn-sm" type="submit">
+                                    <i class="bi bi-check-circle"></i> Approve
+                                </button>
+                            </form>
+                            <form asp-controller="AdminEvents" asp-action="Reject" asp-route-id="@e.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-outline-danger btn-sm" type="submit">
+                                    <i class="bi bi-x-circle"></i> Reject
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-between small text-muted">
+                        <span>#@e.Id</span>
+                        <span>Created @e.CreatedAt.ToLocalTime():g</span>
+                    </div>
+                </div>
+            </div>
+
+            @* ------- Modal with Full Details (unchanged core, modernized container) ------- *@
+            <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@modalId-Label" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content modal-dark glass">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title" id="@modalId-Label">@e.Title</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row g-4">
+                                <div class="col-lg-8">
+                                    @if (!string.IsNullOrWhiteSpace(e.ImagePath))
+                                    {
+                                        <img src="@e.ImagePath" alt="cover"
+                                             class="w-100 rounded-3 mb-3 object-cover"
+                                             style="max-height:420px;" />
+                                    }
+
+                                    <div class="text-muted mb-2">
+                                        <i class="bi bi-clock"></i>
+                                        @e.StartsAt.ToLocalTime():dddd, MMM dd yyyy • h:mm tt – @e.EndsAt.ToLocalTime():h:mm tt
+                                        <span class="ms-1">(local)</span>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <strong>Price:</strong>
+                                        <span class="text-muted">@((e.Price > 0) ? $"${e.Price:0.##}" : "Free")</span>
+                                    </div>
+
+                                    <article class="rounded-3 p-3 surface">
+                                        @Html.Raw(Html.Encode(e.Description).Replace("\n","<br/>"))
+                                    </article>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <div class="surface p-3 mb-3 rounded-3">
+                                        <h6 class="mb-3">Registration</h6>
+                                        @if (hasCap)
+                                        {
+                                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                                <span>Tickets</span>
+                                                <span>@used / @cap</span>
+                                            </div>
+                                            <div class="progress bg-dim mb-2" style="height:10px;">
+                                                <div class="progress-bar bg-accent" role="progressbar" style="width:@pct%"></div>
+                                            </div>
+                                            <div class="small text-muted mb-2">@pct% filled</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-muted">Unlimited tickets</div>
+                                        }
+                                    </div>
+
+                                    <div class="surface p-3 mb-3 rounded-3">
+                                        <h6 class="mb-2">Event Info</h6>
+                                        <ul class="list-unstyled small text-muted mb-0">
+                                            <li class="mb-1"><i class="bi bi-calendar-event"></i> @e.StartsAt.ToLocalTime():ddd, MMM d · @e.StartsAt.ToLocalTime():h:mm tt</li>
+                                            <li class="mb-1"><i class="bi bi-hourglass-split"></i> Ends @e.EndsAt.ToLocalTime():h:mm tt</li>
+                                            <li class="mb-1">
+                                                <i class="bi bi-geo-alt"></i>
+                                                @(e.IsOnline ? "Online" : (string.IsNullOrWhiteSpace(e.Location) ? "Location TBA" : e.Location))
+                                            </li>
+                                            <li><i class="bi bi-person-badge"></i> @(e.CreatedBy?.Email ?? e.CreatedById)</li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+                                        <form asp-controller="AdminEvents" asp-action="Approve" asp-route-id="@e.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-success" type="submit"><i class="bi bi-check-circle"></i> Approve</button>
+                                        </form>
+                                        <form asp-controller="AdminEvents" asp-action="Reject" asp-route-id="@e.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button class="btn btn-outline-danger" type="submit"><i class="bi bi-x-circle"></i> Reject</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 }
 
 @section Styles {
     <style>
-        /* Accent purple header */
-        .table-accent {
-            background-color: #2d033b;
-            color: #fff;
+        :root {
+            --surface: #121521;
+            --surface-2: #151a28;
+            --text: #e6edf3;
+            --muted: #9ca3af;
+            --outline: rgba(255,255,255,.08);
+            --ring: rgba(124, 58, 237, .35);
         }
 
-        .text-accent {
-            color: #a020f0 !important; /* your purple accent */
+        .text-accent { color: #a78bfa !important; }
+        .bg-gradient-accent {
+            background: linear-gradient(90deg,#7c3aed,#6d28d9);
         }
 
-        .card.bg-dark {
-            background-color: #1a1a1a !important;
+        .glass {
+            background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--outline) !important;
         }
+        .surface { background: var(--surface-2); border: 1px solid var(--outline); }
+
+        body, .card, .modal-dark { color: var(--text); }
+        .card { background: var(--surface); }
+        .modal-dark { background: #0f1218; }
+        .object-cover { object-fit: cover; }
+
+        /* Chips */
+        .chip {
+            padding: .25rem .5rem;
+            border-radius: 999px;
+            border: 1px solid var(--outline);
+            font-size: .75rem;
+            line-height: 1rem;
+            white-space: nowrap;
+        }
+        .chip-info { background: rgba(125, 211, 252, .12); color: #bae6fd; border-color: rgba(125, 211, 252, .25); }
+        .chip-secondary { background: rgba(148, 163, 184, .12); color: #e2e8f0; border-color: rgba(148, 163, 184, .25); }
+        .bg-outline { background: transparent; color: var(--muted); border: 1px dashed var(--outline); }
+
+        .bg-dim { background-color: rgba(255,255,255,.06) !important; }
+        .bg-accent { background: linear-gradient(90deg,#7c3aed,#6d28d9); }
+
+        .event-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(0,0,0,.35);
+            border-color: var(--ring) !important;
+        }
+
+        /* Toolbar */
+        .input-icon { position: relative; }
+        .input-icon > i {
+            position: absolute; inset-inline-start: .6rem; top: 50%; transform: translateY(-50%);
+            color: var(--muted); pointer-events: none;
+        }
+        .input-icon > input { padding-inline-start: 2rem; background: var(--surface); border: 1px solid var(--outline); color: var(--text); }
+        .form-select { background: var(--surface); border: 1px solid var(--outline); color: var(--text); }
+        .form-select:focus, .form-control:focus { border-color: var(--ring); box-shadow: 0 0 0 .2rem var(--ring); }
+
+        /* Buttons */
+        .btn-success { background: #16a34a; border-color: #16a34a; }
+        .btn-outline-light { border-color: var(--outline); color: var(--text); }
+        .btn-outline-light:hover { background: rgba(255,255,255,.06); }
+        .btn-outline-danger { border-color: rgba(239,68,68,.4); color: #fca5a5; }
+        .btn-outline-danger:hover { background: rgba(239,68,68,.1); color: #fecaca; }
+
+        /* Utilities */
+        .table-accent { background-color: #2d033b; color: #fff; } /* kept if used elsewhere */
     </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            const grid = document.getElementById('evtGrid');
+            const search = document.getElementById('evtSearch');
+            const sort = document.getElementById('evtSort');
+
+            function filter() {
+                const q = (search.value || '').trim().toLowerCase();
+                [...grid.children].forEach(col => {
+                    const t = (col.dataset.title || '').toLowerCase();
+                    const a = (col.dataset.author || '').toLowerCase();
+                    const l = (col.dataset.location || '').toLowerCase();
+                    const match = !q || t.includes(q) || a.includes(q) || l.includes(q);
+                    col.style.display = match ? '' : 'none';
+                });
+            }
+
+            function sortCards() {
+                const nodes = [...grid.children];
+                const key = sort.value;
+                nodes.sort((a, b) => {
+                    switch (key) {
+                        case 'start-asc':  return Number(a.dataset.start) - Number(b.dataset.start);
+                        case 'start-desc': return Number(b.dataset.start) - Number(a.dataset.start);
+                        case 'created-asc':  return Number(a.dataset.created) - Number(b.dataset.created);
+                        case 'created-desc': return Number(b.dataset.created) - Number(a.dataset.created);
+                        case 'title-asc':  return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+                        case 'title-desc': return (b.dataset.title || '').localeCompare(a.dataset.title || '');
+                        default: return 0;
+                    }
+                });
+                nodes.forEach(n => grid.appendChild(n));
+            }
+
+            search.addEventListener('input', filter);
+            sort.addEventListener('change', sortCards);
+
+            // initial sort
+            sortCards();
+        })();
+    </script>
 }

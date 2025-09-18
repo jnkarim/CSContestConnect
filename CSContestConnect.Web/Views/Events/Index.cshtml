@@ -1,33 +1,399 @@
 @model IEnumerable<CSContestConnect.Web.Models.Event>
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Events";
+
+    var q = Context?.Request?.Query["q"].ToString() ?? "";
+    var type = Context?.Request?.Query["type"].ToString() ?? "";
+    var status = Context?.Request?.Query["status"].ToString() ?? "";
+    var sort = Context?.Request?.Query["sort"].ToString() ?? "soonest";
+
+    string DefaultCover = "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=250&fit=crop";
+
+    string Trim(string? s, int n = 140)
+        => string.IsNullOrWhiteSpace(s) ? "No description provided." :
+           (s!.Length <= n ? s : s.Substring(0, n) + "…");
+
+    bool IsOpen(CSContestConnect.Web.Models.Event e)
+    {
+        // Open if not sold out AND current time before end
+        return (!e.TicketCapacity.HasValue || e.RegisteredCount < e.TicketCapacity.Value)
+               && e.EndsAt.ToUniversalTime() >= DateTime.UtcNow;
+    }
+
+    bool IsSoldOut(CSContestConnect.Web.Models.Event e)
+        => e.TicketCapacity.HasValue && e.RegisteredCount >= e.TicketCapacity.Value;
+
+    int TicketPct(CSContestConnect.Web.Models.Event e)
+    {
+        if (!e.TicketCapacity.HasValue || e.TicketCapacity.Value <= 0) return 0;
+        var cap = Math.Max(1, e.TicketCapacity.Value);
+        var pct = (int)Math.Round(100.0 * Math.Min(e.RegisteredCount, cap) / cap);
+        return Math.Clamp(pct, 0, 100);
+    }
 }
 
-<h2 class="mb-3">Approved Events</h2>
+<link rel="stylesheet" href="~/css/events.css" asp-append-version="true" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
 
-@if (!Model.Any())
-{
-    <p>No events yet.</p>
-}
-else
-{
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-        @foreach (var e in Model)
-        {
-            <div class="col">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">@e.Title</h5>
-                        <p class="card-text">@e.Description</p>
-                        <ul class="list-unstyled small text-muted">
-                            <li><strong>When:</strong> @e.StartsAt:g – @e.EndsAt:g (UTC)</li>
-                            <li><strong>Where:</strong> @(e.IsOnline ? "Online" : e.Location ?? "TBA")</li>
-                            <li><strong>Price:</strong> @e.Price.ToString("0.##")</li>
-                        </ul>
-                        <a class="btn btn-primary btn-sm" asp-action="Details" asp-route-id="@e.Id">Details</a>
+<a href="#results" class="skip-link">Skip to results</a>
+
+<header class="events-hero">
+    <div class="container">
+        <div class="hero-copy">
+            <h1 class="title">CSContestConnect Events</h1>
+            <p class="subtitle">Your ultimate hub for hackathons and programming contests. Discover local events and global competitions in one place.</p>
+        </div>
+
+        <form method="get" class="filters" role="search" aria-label="Search and filter events">
+            <div class="input-group">
+                <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20"><circle cx="11" cy="11" r="7" stroke-width="1.5"/><path d="M20 20l-3.5-3.5" stroke-width="1.5"/></svg>
+                </span>
+                <input type="search" name="q" placeholder="Search events (title, tags, organizer)…" value="@q" aria-label="Search events" />
+            </div>
+
+            <label class="select">
+                <span class="select-label">Type</span>
+                <select name="type" aria-label="Filter by event type">
+                    @if (string.IsNullOrWhiteSpace(type)) {
+                        <option value="" selected>All types</option>
+                    } else {
+                        <option value="">All types</option>
+                    }
+                    <option value="hackathon" selected="@(type=="hackathon")">Hackathon</option>
+                    <option value="contest"   selected="@(type=="contest")">Programming Contest</option>
+                </select>
+            </label>
+
+            <label class="select">
+                <span class="select-label">Status</span>
+                <select name="status" aria-label="Filter by registration status">
+                    @if (string.IsNullOrWhiteSpace(status)) {
+                        <option value="" selected>Any</option>
+                    } else {
+                        <option value="">Any</option>
+                    }
+                    <option value="open"   selected="@(status=="open")">Open</option>
+                    <option value="closed" selected="@(status=="closed")">Closed</option>
+                </select>
+            </label>
+
+            <label class="select">
+                <span class="select-label">Sort</span>
+                <select name="sort" aria-label="Sort order">
+                    <option value="soonest" selected="@(string.IsNullOrWhiteSpace(sort) || sort=="soonest")">Soonest</option>
+                    <option value="newest"  selected="@(sort=="newest")">Newest</option>
+                    <option value="popular" selected="@(sort=="popular")">Most Popular</option>
+                </select>
+            </label>
+
+            <button class="btn-primary" type="submit">Apply Filters</button>
+        </form>
+    </div>
+</header>
+
+<main id="results" class="container events-section">
+    <!-- Featured Events Carousel -->
+    <section class="featured-section">
+        <div class="section-header">
+            <h2 class="section-title">🔥 Featured Events</h2>
+            <p class="section-subtitle">Don't miss these highlighted competitions</p>
+        </div>
+
+        <div class="swiper featured-swiper">
+            <div class="swiper-wrapper">
+                <!-- keep your three static featured slides -->
+                <div class="swiper-slide">
+                    <div class="featured-card">
+                        <div class="featured-image" style="background-image: url('https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=600&h=300&fit=crop')"></div>
+                        <div class="featured-content">
+                            <div class="featured-meta">
+                                <span class="pill pill-featured">Featured</span>
+                                <span class="pill">Hackathon</span>
+                            </div>
+                            <h3 class="featured-title">AI Revolution Hackathon 2025</h3>
+                            <p class="featured-desc">48-hour global hackathon focused on AI innovation and machine learning solutions.</p>
+                            <div class="featured-details">
+                                <span class="detail-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><path d="M7 11h10M7 15h6M16 3v4M8 3v4M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z" stroke-width="1.5"/></svg>
+                                    March 15-17, 2025
+                                </span>
+                                <span class="detail-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" stroke-width="1.5"/></svg>
+                                    Global • Online
+                                </span>
+                            </div>
+                            <a href="#" class="btn-primary">Register Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swiper-slide">
+                    <div class="featured-card">
+                        <div class="featured-image" style="background-image: url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=300&fit=crop')"></div>
+                        <div class="featured-content">
+                            <div class="featured-meta">
+                                <span class="pill pill-featured">Featured</span>
+                                <span class="pill">Contest</span>
+                            </div>
+                            <h3 class="featured-title">Algorithmic Mastery Championship</h3>
+                            <p class="featured-desc">Elite programming contest with complex algorithmic challenges and data structures.</p>
+                            <div class="featured-details">
+                                <span class="detail-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><path d="M7 11h10M7 15h6M16 3v4M8 3v4M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z" stroke-width="1.5"/></svg>
+                                    March 22, 2025
+                                </span>
+                                <span class="detail-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" stroke-width="1.5"/></svg>
+                                    University Campus
+                                </span>
+                            </div>
+                            <a href="#" class="btn-primary">Join Contest</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="swiper-slide">
+                    <div class="featured-card">
+                        <div class="featured-image" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=300&fit=crop')"></div>
+                        <div class="featured-content">
+                            <div class="featured-meta">
+                                <span class="pill pill-featured">Featured</span>
+                                <span class="pill">Hackathon</span>
+                            </div>
+                            <h3 class="featured-title">Sustainable Tech Challenge</h3>
+                            <p class="featured-desc">Build solutions for climate change and environmental sustainability.</p>
+                            <div class="featured-details">
+                                <span class="detail-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><path d="M7 11h10M7 15h6M16 3v4M8 3v4M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z" stroke-width="1.5"/></svg>
+                                    April 5-7, 2025
+                                </span>
+                                <span class="detail-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" stroke-width="1.5"/></svg>
+                                    Hybrid Event
+                                </span>
+                            </div>
+                            <a href="#" class="btn-primary">Learn More</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        }
-    </div>
+
+            <div class="swiper-pagination" aria-label="Featured slides pagination"></div>
+            <div class="swiper-button-next" aria-label="Next slide"></div>
+            <div class="swiper-button-prev" aria-label="Previous slide"></div>
+        </div>
+    </section>
+
+    <!-- Local Events Section (DYNAMIC from your DB) -->
+    <section class="events-category">
+        <div class="section-header">
+            <h2 class="section-title">🎯 Ticketed Events</h2>
+            <p class="section-subtitle">Events hosted and managed by our community moderators</p>
+        </div>
+
+        <div class="events-grid">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var e in Model)
+                {
+                    var soldOut = IsSoldOut(e);
+                    var open = IsOpen(e);
+                    var cover = string.IsNullOrWhiteSpace(e.ImagePath) ? DefaultCover : e.ImagePath!;
+                    var isFree = e.Price == 0m;
+                    var pct = TicketPct(e);
+
+                    <article class="event-card local-event">
+                        <a class="cover" style="background-image: url('@cover')" asp-controller="Events" asp-action="Details" asp-route-id="@e.Id"></a>
+
+                        <div class="card-body">
+                            <div class="meta">
+                                @if (soldOut)
+                                {
+                                    <span class="pill pill-closed">Sold Out</span>
+                                }
+                                else
+                                {
+                                    <span class="pill @(open ? "pill-open" : "pill-closed")">@(open ? "Open" : "Closed")</span>
+                                }
+                                <span class="pill pill-local">Local Event</span>
+                                <span class="pill">@((e.IsOnline ? "Online" : "On-site"))</span>
+                            </div>
+
+                            <h3 class="card-title">
+                                <a asp-controller="Events" asp-action="Details" asp-route-id="@e.Id">@e.Title</a>
+                            </h3>
+
+                            <p class="card-desc">@Trim(e.Description, 150)</p>
+
+                            <ul class="details">
+                                <li>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11h10M7 15h6M16 3v4M8 3v4M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                                    <span>@e.StartsAt.ToLocalTime():ddd, MMM d • h:mm tt – @e.EndsAt.ToLocalTime():h:mm tt</span>
+                                </li>
+                                <li>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                                    <span>@(e.IsOnline ? "Online" : (string.IsNullOrWhiteSpace(e.Location) ? "Location TBA" : e.Location))</span>
+                                </li>
+                                <li>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11V7a4 4 0 0 0-8 0v4H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                                    <span>@(isFree ? "Free Entry" : $"${e.Price:0.##} Registration Fee")</span>
+                                </li>
+                            </ul>
+
+                            @if (e.TicketCapacity.HasValue)
+                            {
+                                <div class="progress" style="--pct:@pct%">
+                                    <div class="bar" style="width:@pct%"></div>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    @e.RegisteredCount / @e.TicketCapacity tickets
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="small text-muted mt-1">Unlimited tickets</div>
+                            }
+
+                            <div class="card-actions">
+                                <a class="btn-primary" asp-controller="Events" asp-action="Details" asp-route-id="@e.Id">Details</a>
+                            </div>
+                        </div>
+                    </article>
+                }
+            }
+            else
+            {
+                <div class="empty-state" role="status">
+                    <h3>No ticketed events yet</h3>
+                    <p>Come back later or explore the global competitions below.</p>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- External Events Section (STATIC) -->
+    <section class="events-category">
+        <div class="section-header">
+            <h2 class="section-title">🌍 External Competitions</h2>
+            <p class="section-subtitle">Major international contests and hackathons — external registration required</p>
+        </div>
+
+        <div class="events-grid">
+            <!-- NASA -->
+            <article class="event-card external-event">
+                <div class="cover" style="background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=250&fit=crop')"></div>
+                <div class="card-body">
+                    <div class="meta">
+                        <span class="pill pill-open">Open</span>
+                        <span class="pill">Hackathon</span>
+                        <span class="pill pill-external">Global Event</span>
+                    </div>
+                    <h3 class="card-title"><a href="https://spaceappschallenge.org" target="_blank" rel="noopener">NASA Space Apps Challenge 2025</a></h3>
+                    <p class="card-desc">Annual global hackathon where teams use NASA's open data to solve real-world problems on Earth and in space.</p>
+                    <ul class="details">
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11h10M7 15h6M16 3v4M8 3v4M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>Oct 4-6, 2025</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>Global • 400+ Locations</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>NASA Official Event</span>
+                        </li>
+                    </ul>
+                    <div class="card-actions">
+                        <a class="btn-primary" href="https://spaceappschallenge.org" target="_blank" rel="noopener">Register on NASA Site</a>
+                        <a class="btn-ghost" href="https://spaceappschallenge.org" target="_blank" rel="noopener">Learn More</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ICPC -->
+            <article class="event-card external-event">
+                <div class="cover" style="background-image: url('https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=250&fit=crop')"></div>
+                <div class="card-body">
+                    <div class="meta">
+                        <span class="pill pill-open">Open</span>
+                        <span class="pill">Programming Contest</span>
+                        <span class="pill pill-external">Global Event</span>
+                    </div>
+                    <h3 class="card-title"><a href="https://icpc.global" target="_blank" rel="noopener">ICPC World Finals 2025</a></h3>
+                    <p class="card-desc">The most prestigious programming contest in the world. Teams compete in algorithmic problem solving.</p>
+                    <ul class="details">
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11h10M7 15h6M16 3v4M8 3v4M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>April 15-20, 2025</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>Luxor, Egypt</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>Qualification Required</span>
+                        </li>
+                    </ul>
+                    <div class="card-actions">
+                        <a class="btn-primary" href="https://icpc.global" target="_blank" rel="noopener">Visit ICPC Site</a>
+                        <a class="btn-ghost" href="https://icpc.global" target="_blank" rel="noopener">View Details</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Google Code Jam -->
+            <article class="event-card external-event">
+                <div class="cover" style="background-image: url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=250&fit=crop')"></div>
+                <div class="card-body">
+                    <div class="meta">
+                        <span class="pill pill-open">Open</span>
+                        <span class="pill">Hackathon</span>
+                        <span class="pill pill-external">Global Event</span>
+                    </div>
+                    <h3 class="card-title"><a href="https://codingcompetitions.withgoogle.com" target="_blank" rel="noopener">Google Code Jam 2025</a></h3>
+                    <p class="card-desc">Google's longest running global programming competition with multiple rounds and cash prizes.</p>
+                    <ul class="details">
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11h10M7 15h6M16 3v4M8 3v4M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>March – August 2025</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>Online Global</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <span>Google Official</span>
+                        </li>
+                    </ul>
+                    <div class="card-actions">
+                        <a class="btn-primary" href="https://codingcompetitions.withgoogle.com" target="_blank" rel="noopener">Join on Google</a>
+                        <a class="btn-ghost" href="https://codingcompetitions.withgoogle.com" target="_blank" rel="noopener">More Info</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+
+@section Scripts{
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script>
+        // Swiper init (Featured)
+        const featuredSwiper = new Swiper('.featured-swiper', {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            loop: true,
+            pagination: { el: '.swiper-pagination', clickable: true },
+            navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+            breakpoints: {
+                768: { slidesPerView: 2 },
+                1200: { slidesPerView: 3 }
+            }
+        });
+    </script>
 }

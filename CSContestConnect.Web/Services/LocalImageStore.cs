@@ -1,4 +1,3 @@
-// CSContestConnect.Web/Services/LocalImageStore.cs
 using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
@@ -31,20 +30,43 @@ namespace CSContestConnect.Web.Services
             using (var stream = new FileStream(absPath, FileMode.Create))
                 await file.CopyToAsync(stream);
 
-            var rel = $"/uploads/profiles/{fileName}";
-            return rel;
+            return $"/uploads/profiles/{fileName}";
         }
 
         public async Task DeleteProfileImageAsync(string? imagePath, string webRootPath)
         {
-            if (string.IsNullOrWhiteSpace(imagePath))
-                return;
+            if (string.IsNullOrWhiteSpace(imagePath)) return;
 
             var fullPath = Path.Combine(webRootPath, imagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
             if (File.Exists(fullPath))
             {
                 await Task.Run(() => File.Delete(fullPath));
             }
+        }
+
+        // NEW: Save event image
+        public async Task<string> SaveEventImageAsync(IFormFile file, string webRootPath, string? existingRelativePath = null)
+        {
+            if (file == null || file.Length == 0) return existingRelativePath ?? string.Empty;
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!Allowed.Contains(ext)) throw new InvalidOperationException("Only JPG/PNG/WEBP/GIF allowed.");
+
+            var folder = Path.Combine(webRootPath, "uploads", "events");
+            Directory.CreateDirectory(folder);
+
+            if (!string.IsNullOrWhiteSpace(existingRelativePath))
+            {
+                var oldPath = Path.Combine(webRootPath, existingRelativePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (File.Exists(oldPath)) File.Delete(oldPath);
+            }
+
+            var fileName = $"{Guid.NewGuid():N}{ext}";
+            var absPath = Path.Combine(folder, fileName);
+            using (var stream = new FileStream(absPath, FileMode.Create))
+                await file.CopyToAsync(stream);
+
+            return $"/uploads/events/{fileName}";
         }
     }
 }

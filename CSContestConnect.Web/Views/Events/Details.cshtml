@@ -1,168 +1,129 @@
 @model CSContestConnect.Web.Models.Event
 @{
-    ViewData["Title"] = Model?.Title ?? "Event";
-    bool isAuth = User?.Identity?.IsAuthenticated ?? false;
+    ViewData["Title"] = Model.Title;
+    Layout = "_Layout";
 
-    string dateRange = $"{Model.StartsAt:ddd, MMM d, yyyy h:mm tt} – {Model.EndsAt:ddd, MMM d, yyyy h:mm tt} (UTC)";
-    bool isFree = (Model?.Price ?? 0m) == 0m;
+    bool hasCap = Model.TicketCapacity.HasValue;
+    int cap = hasCap ? Math.Max(1, Model.TicketCapacity!.Value) : 0;
+    int used = hasCap ? Math.Min(Model.RegisteredCount, cap) : 0;
+    int pct = hasCap ? Math.Clamp((int)Math.Round(100.0 * used / cap), 0, 100) : 0;
 }
 
-<div class="container-xxl my-4 my-md-5">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
-    <!-- Breadcrumbs -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb small">
-            <li class="breadcrumb-item">
-                <a class="link-light text-decoration-none" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-house-door"></i> Home
-                </a>
-            </li>
-            <li class="breadcrumb-item">
-                <a class="link-light text-decoration-none" asp-controller="Events" asp-action="Index">Events</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
-        </ol>
-    </nav>
+<style>
+    :root{
+        --bg-0:#0b0e12; --bg-1:#11161c; --bg-2:#0e1319;
+        --tx-0:#e6edf3; --tx-1:#c1c8d1; --tx-2:#9aa4b2;
+        --bd-0:#242b36; --ac-0:#7c3aed;
+    }
+    body{ background:var(--bg-0); color:var(--tx-0) }
 
+    .csc-card{ background:var(--bg-1); border:1px solid var(--bd-0); border-radius:16px; }
+    .event-cover{
+        width:100%; height:420px; object-fit:cover;
+        border-radius:16px; border:1px solid var(--bd-0);
+        box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    .pill{ display:inline-flex; align-items:center; gap:.3rem; padding:.25rem .6rem; border-radius:999px;
+        font-size:.8rem; background:#1a1f28; border:1px solid var(--bd-0); color:var(--tx-1) }
+    .pill-open{ color:#22c55e; border-color:rgba(34,197,94,.4); background:rgba(34,197,94,.08) }
+    .pill-closed{ color:#f59e0b; border-color:rgba(245,158,11,.4); background:rgba(245,158,11,.08) }
+    .pill-sold{ color:#ef4444; border-color:rgba(239,68,68,.4); background:rgba(239,68,68,.08) }
+
+    .progress-wrap{ background:var(--bg-2); border-radius:12px; height:10px; overflow:hidden; }
+    .progress-bar{ height:100%; background:linear-gradient(90deg,var(--ac-0),#6d28d9); transition:width .3s; }
+
+    .btn-primary{ background:linear-gradient(180deg,var(--ac-0),#6d28d9); border:0 }
+    .btn-primary:hover{ background:linear-gradient(180deg,#8b5cf6,var(--ac-0)) }
+</style>
+
+<div class="container py-4">
     <div class="row g-4">
-        <!-- Main content -->
+        <!-- Left column -->
         <div class="col-lg-8">
-            <div class="card bg-dark border-secondary shadow-sm">
-                <div class="card-body p-4">
-
-                    <!-- Title + badges -->
-                    <div class="d-flex align-items-start gap-3 flex-wrap">
-                        <h1 class="h3 mb-0">@Model.Title</h1>
-
-                        <div class="d-flex gap-2">
-                            @if (isFree)
-                            {
-                                <span class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle">
-                                    <i class="bi bi-ticket-perforated"></i> Free
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill bg-info-subtle text-info-emphasis border border-info-subtle">
-                                    <i class="bi bi-cash-coin"></i> @Model.Price.ToString("0.##")
-                                </span>
-                            }
-
-                            @if (Model.IsOnline)
-                            {
-                                <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle">
-                                    <i class="bi bi-wifi"></i> Online
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
-                                    <i class="bi bi-geo-alt"></i> On-site
-                                </span>
-                            }
-                        </div>
-                    </div>
-
-                    <hr class="text-secondary" />
-
-                    <!-- Meta -->
-                    <ul class="list-unstyled vstack gap-2 mb-4">
-                        <li class="d-flex align-items-center gap-2">
-                            <i class="bi bi-calendar-event"></i>
-                            <span class="text-muted">@dateRange</span>
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <i class="bi bi-map"></i>
-                            <span class="text-muted">
-                                @(Model.IsOnline
-                                    ? "Online"
-                                    : string.IsNullOrWhiteSpace(Model.Location) ? "Location TBA" : Model.Location)
-                            </span>
-                        </li>
-                    </ul>
-
-                    <!-- Description -->
-                    <div class="mb-4">
-                        <h2 class="h6 text-uppercase text-muted mb-2">About this event</h2>
-                        <div class="lead fs-6">
-                            @Html.Raw((Model.Description ?? "No description provided.").Replace("\n", "<br />"))
-                        </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="d-flex flex-wrap gap-2">
-                        @if (isAuth)
-                        {
-                            <a class="btn btn-outline-light" asp-action="My">
-                                <i class="bi bi-arrow-left"></i> Back to My Events
-                            </a>
-                        }
-                        else
-                        {
-                            <a class="btn btn-outline-light" asp-action="Index">
-                                <i class="bi bi-arrow-left"></i> Back to Events
-                            </a>
-                        }
-
-                        @* Optional: show a register button if you already have an action *@
-                        @* <a class="btn btn-primary" asp-action="Register" asp-route-id="@Model.Id">
-                            <i class="bi bi-person-plus"></i> Register
-                           </a> *@
-                    </div>
-
+            <div class="mb-3">
+                <h1 class="mb-2">@Model.Title</h1>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    @{
+                        var open = (!Model.TicketCapacity.HasValue || Model.RegisteredCount < Model.TicketCapacity.Value)
+                                   && Model.EndsAt.ToUniversalTime() >= DateTime.UtcNow;
+                        if (Model.IsFull) { <span class="pill pill-sold"><i class="bi bi-x-octagon"></i> Sold Out</span>; }
+                        else { <span class="pill @(open ? "pill-open" : "pill-closed")">@((open ? "Open" : "Closed"))</span>; }
+                        if (Model.IsOnline) { <span class="pill"><i class="bi bi-wifi"></i> Online</span>; }
+                        else { <span class="pill"><i class="bi bi-geo-alt"></i> On-site</span>; }
+                    }
                 </div>
+
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <img src="@Model.ImagePath" alt="@Model.Title cover" class="event-cover mb-3" />
+                }
+
+                <p class="text-muted mb-2">
+                    <i class="bi bi-clock"></i>
+                    @Model.StartsAt.ToLocalTime():dddd, MMM dd yyyy • h:mm tt –
+                    @Model.EndsAt.ToLocalTime():h:mm tt
+                </p>
+                @if (!string.IsNullOrWhiteSpace(Model.Location))
+                {
+                    <p class="text-muted mb-2"><i class="bi bi-geo-alt"></i> @Model.Location</p>
+                }
+
+                <p class="mb-3"><strong>Price:</strong> @(Model.Price > 0 ? $"${Model.Price:0.##}" : "Free")</p>
+
+                <article class="csc-card p-3 p-md-4">
+                    @Html.Raw(Html.Encode(Model.Description).Replace("\n","<br/>"))
+                </article>
             </div>
         </div>
 
-        <!-- Sidebar -->
+        <!-- Right column -->
         <div class="col-lg-4">
-            <div class="card bg-dark border-secondary shadow-sm">
-                <div class="card-body p-4">
-                    <h3 class="h6 text-uppercase text-muted mb-3">Event summary</h3>
+            <div class="csc-card p-3 p-md-4 mb-4">
+                <h5 class="mb-3">Registration</h5>
 
-                    <div class="vstack gap-3">
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Starts</span>
-                            <span>@Model.StartsAt:MMM d, yyyy h:mm tt</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Ends</span>
-                            <span>@Model.EndsAt:MMM d, yyyy h:mm tt</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Format</span>
-                            <span>@(Model.IsOnline ? "Online" : "On-site")</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Price</span>
-                            <span>@(isFree ? "Free" : Model.Price.ToString("0.##"))</span>
-                        </div>
-                        @if (!Model.IsOnline && !string.IsNullOrWhiteSpace(Model.Location))
-                        {
-                            <div class="d-flex gap-2">
-                                <i class="bi bi-geo-alt mt-1"></i>
-                                <div>@Model.Location</div>
-                            </div>
-                        }
+                @if (Model.TicketCapacity.HasValue)
+                {
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Tickets</span>
+                        <span>@Model.RegisteredCount / @Model.TicketCapacity</span>
                     </div>
+                    <div class="progress-wrap mb-2"><div class="progress-bar" style="width:@pct%"></div></div>
+                    <div class="text-muted small mb-3">@pct% filled</div>
+                }
+                else
+                {
+                    <div class="text-muted mb-3">Unlimited tickets</div>
+                }
 
-                    <hr class="text-secondary" />
+                @if (Model.IsFull)
+                {
+                    <button class="btn btn-outline-secondary w-100" disabled><i class="bi bi-x-octagon"></i> Sold Out</button>
+                }
+                else
+                {
+                    <form asp-action="Register" method="post" class="d-grid gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-ticket-perforated"></i> Register</button>
+                    </form>
+                }
 
-                    <div class="d-grid">
-                        @if (isAuth)
-                        {
-                            <a class="btn btn-primary" asp-action="Index">
-                                <i class="bi bi-grid-3x3-gap"></i> Browse more events
-                            </a>
-                        }
-                        else
-                        {
-                            <a class="btn btn-primary" asp-controller="Account" asp-action="Login">
-                                <i class="bi bi-box-arrow-in-right"></i> Login to register
-                            </a>
-                        }
-                    </div>
-                </div>
+                @if (TempData["Msg"] is string m)
+                {
+                    <div class="alert alert-@(TempData["MsgType"] ?? "info") mt-3">@m</div>
+                }
+            </div>
+
+            <div class="csc-card p-3 p-md-4">
+                <h6 class="mb-2">Event Info</h6>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li class="mb-1"><i class="bi bi-calendar-event"></i> @Model.StartsAt.ToLocalTime():ddd, MMM d • @Model.StartsAt.ToLocalTime():h:mm tt</li>
+                    <li class="mb-1"><i class="bi bi-hourglass-split"></i> Ends @Model.EndsAt.ToLocalTime():h:mm tt</li>
+                    <li class="mb-1"><i class="bi bi-geo-alt"></i> @(Model.IsOnline ? "Online" : (string.IsNullOrWhiteSpace(Model.Location) ? "Location TBA" : Model.Location))</li>
+                    <li><i class="bi bi-cash"></i> @(Model.Price > 0 ? $"${Model.Price:0.##} registration" : "Free entry")</li>
+                </ul>
             </div>
         </div>
     </div>
